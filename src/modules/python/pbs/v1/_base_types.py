@@ -132,7 +132,7 @@ class PbsAttributeDescriptor(object):
         #: why
         if value_type is None:
             self._value_type = (str,)
-        elif isinstance(value_type,(list,tuple)):
+        elif isinstance(value_type, (list, tuple)):
             self._value_type = value_type
         else:
             self._value_type = tuple(value_type)
@@ -275,8 +275,8 @@ class PbsReadOnlyDescriptor(object):
     #: m(__delete__)
     
     def __str__(self):
-        if isinstance(self._value,(dict,)):
-            return ",".join(self._value.keys())
+        if isinstance(self._value, dict):
+            return ",".join(list(self._value.keys()))
         else:
             return str(self._value)
         #
@@ -286,7 +286,7 @@ class PbsReadOnlyDescriptor(object):
 #: End Class PbsReadOnlyDescriptor
 
 #
-from _exc_types import *
+from ._exc_types import *
 
 class _generic_attr(object):
     """A generic attribute"""
@@ -294,16 +294,16 @@ class _generic_attr(object):
     # _derived_types: What type other than '_generic_attr' will be accepted
     _derived_types = (str,)
 
-    def __init__(self,value):
+    def __init__(self, value):
 
         self._value = None
         if value is not None:
-            if isinstance(value,(str,_generic_attr)):
+            if isinstance(value, (str, _generic_attr)):
                 self._value = value
             else:
                 self._value = value.__class__(value)
 
-        super(_generic_attr,self).__init__()
+        super(_generic_attr, self).__init__()
     #: m(__init__)
     def __str__(self):
         """String representation of the object"""
@@ -342,7 +342,7 @@ def transform_sizes(sz1, sz2):
 
     s_num = -1
     s = sz1
-    if isinstance(sz1,(int,long,size)):
+    if isinstance(sz1, (int, size)):
         s = _size(str(sz1))
         if s.__le__(_size("10kb")):
             # make all values at least 10kb to prevent rounding up errors
@@ -352,7 +352,7 @@ def transform_sizes(sz1, sz2):
 
     o_num = -1
     o = sz2 
-    if isinstance(sz2,(int,long,size)):
+    if isinstance(sz2, (int, size)):
         o = _size(str(sz2))
         if o.__le__(_size("10kb")):
             # make all values at least 10kb to prevent rounding up errors
@@ -360,12 +360,12 @@ def transform_sizes(sz1, sz2):
             o_num = to_bytes(o) + 1073741824
             o = _size(o_num)
 
-    if s_num == -1 and isinstance(s,(_size,)):
+    if s_num == -1 and isinstance(s, _size):
         s = _size(s.__add__(_size("1gb")))
-    if o_num == -1 and isinstance(o,(_size,)):
+    if o_num == -1 and isinstance(o, _size):
         o = _size(o.__add__(_size("1gb")))
 
-    l = [s,o]
+    l = [s, o]
     return l
 
 def size_to_kbytes(sz):
@@ -410,8 +410,8 @@ class size(_size):
 
     _derived_types = (_size,)
 
-    def __lt__(self,other):
-        so = transform_sizes(self,other)
+    def __lt__(self, other):
+        so = transform_sizes(self, other)
         s = so[0]
         o = so[1]
 
@@ -424,8 +424,8 @@ class size(_size):
         # uses _size's richcompare
         return s.__lt__(o)
 
-    def __le__(self,other):
-        so = transform_sizes(self,other)
+    def __le__(self, other):
+        so = transform_sizes(self, other)
         s = so[0]
         o = so[1]
 
@@ -438,8 +438,8 @@ class size(_size):
         # uses _size's richcompare
         return s.__le__(o)
 
-    def __gt__(self,other):
-        so = transform_sizes(self,other)
+    def __gt__(self, other):
+        so = transform_sizes(self, other)
         s = so[0]
         o = so[1]
 
@@ -452,8 +452,8 @@ class size(_size):
         # uses _size's richcompare
         return s.__gt__(o)
 
-    def __ge__(self,other):
-        so = transform_sizes(self,other)
+    def __ge__(self, other):
+        so = transform_sizes(self, other)
         s = so[0]
         o = so[1]
 
@@ -466,8 +466,8 @@ class size(_size):
         # uses _size's richcompare
         return s.__ge__(o)
 
-    def __eq__(self,other):
-        so = transform_sizes(self,other)
+    def __eq__(self, other):
+        so = transform_sizes(self, other)
         s = so[0]
         o = so[1]
 
@@ -480,19 +480,19 @@ class size(_size):
         # uses _size's richcompare
         return s.__eq__(o)
 
-    def __ne__(self,other):
+    def __ne__(self, other):
         """
         This is called on a <self> != <other> comparison, where
         <self> is of size type.
         """
-        if not isinstance(other,(int,long,size)):
+        if not isinstance(other, (int, size)):
 	    # if <other> object is not of type 'int', 'long', or 'size',
 	    # then it cannot be transformed into size type.
 	    # So automatically this != comparison should return
 	    # True  - yes, they're not equal.
             return True
     	    
-        so = transform_sizes(self,other)
+        so = transform_sizes(self, other)
         s = so[0]
         o = so[1]
 
@@ -505,12 +505,12 @@ class size(_size):
         # uses _size's richcompare
         return s.__ne__(o)
 
-    def __add__(self,other):
+    def __add__(self, other):
         s = self
         o = other 
-        if isinstance(self,(int,long,size)):
+        if isinstance(self, (int, size)):
             s = _size(str(self))
-        if isinstance(other,(int,long,size)):
+        if isinstance(other, (int, size)):
             o = _size(str(other))
 	# uses _size's add function, but trick is return
 	# the "size" type so that any comparisons with the
@@ -518,12 +518,12 @@ class size(_size):
 	# and not in _size's richcompare.
         return size(s.__add__(o))
 
-    def __sub__(self,other):
+    def __sub__(self, other):
         s = self
         o = other 
-        if isinstance(self,(int,long,size)):
+        if isinstance(self, (int, size)):
             s = _size(str(self))
-        if isinstance(other,(int,long,size)):
+        if isinstance(other, (int, size)):
             o = _size(str(other))
 	# uses _size's subtract function, but trick is return
 	# the "size" type so that any comparisons with the
@@ -547,14 +547,14 @@ class duration(int):
     # using the given _derived_types:
     _derived_types = (int,)
 
-    def __new__(cls,value):
+    def __new__(cls, value):
         valstr = str(value)
 	# validates against the 'walltime' attribute entry of the
 	# the server 'resource' table
         _pbs_v1.validate_input("resc", "walltime", valstr)
         return int.__new__(cls, _pbs_v1.duration_to_secs(valstr))
 
-    def __init__(self,value):
+    def __init__(self, value):
         self.duration_str = str(value)
 
     def __str__(self):
@@ -632,7 +632,7 @@ class pbs_env(dict):
         # generic way, so that the PBS-related variables (e.g. PBS_O*)
         # are allowed to be modified.
         self._generic = generic
-        if isinstance(value,(str,)):
+        if isinstance(value, str):
             # temporarily replace "<esc_char>," with something we
             # don't expect to see: two etx <ascii code 3>
             # since ',' is used as a separator among env variables.
@@ -653,12 +653,12 @@ class pbs_env(dict):
             for v in vals:
                 # now restore "<esc_char>,"
                 v1 = v.replace(double_etx, esc_char + ",").replace(double_stx, esc_char + esc_char)
-                e = v1.split("=",1)
+                e = v1.split("=", 1)
 
                 if len(e) == 2:
 
                     vue = e[1]
-                    if isinstance(e[1], (str,)):
+                    if isinstance(e[1], str):
                         if (_pbs_v1.get_python_daemon_name() != "pbs_python") \
                                                  or (sys.platform != "win32"):
                             # replace \ with \\ if not used to escape special chars
@@ -669,7 +669,7 @@ class pbs_env(dict):
                     ev.update({e[0] : vue})
         else:
             ev = value
-        super(pbs_env,self).__init__(ev)
+        super(pbs_env, self).__init__(ev)
     #: m(__init__)
 
     def __setitem__(self, name, value):
@@ -680,7 +680,7 @@ class pbs_env(dict):
                                           not getattr(self, "_generic"):
             raise BadAttributeValueError("env variable '%s' is readonly" % (name,))
         v = value
-        if isinstance(value, (str,)):
+        if isinstance(value, str):
             if (_pbs_v1.get_python_daemon_name() != "pbs_python") \
                                                  or (sys.platform != "win32"):
                 # replace \ with \\ if not used to escape special chars
@@ -688,12 +688,12 @@ class pbs_env(dict):
                 #       since backslash is recognized as path character
                 v = replace_char_not_before(value, '\\', '\\\\',
                                            [ ',', '\'', '\"', '\\'])
-        super(pbs_env,self).__setitem__(name, v)
+        super(pbs_env, self).__setitem__(name, v)
 
     def __str__(self):
         """String representation of the object"""
         rv = ""
-        for k in self.keys():
+        for k in list(self.keys()):
             if self[k] != None:
                 rv += "%s=%s," % (k, self[k])
         return rv.rstrip(",")
@@ -706,24 +706,24 @@ class email_list(_generic_attr):
     Format: pbs.email_list(<email_address1>, <email address2>)
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         _pbs_v1.validate_input("job", "Mail_Users", value)
-        super(email_list,self).__init__(value)
+        super(email_list, self).__init__(value)
 
 # pbs_list is like email_list except less strict - "str" is allowed as a
 # derived type.
 class pbs_list(_generic_attr):
-    _derived_types = (_generic_attr,str)
-    def __init__(self,value):
+    _derived_types = (_generic_attr, str)
+    def __init__(self, value):
         _pbs_v1.validate_input("job", "Mail_Users", value)
-        super(pbs_list,self).__init__(value)
+        super(pbs_list, self).__init__(value)
 
 class pbs_bool(_generic_attr):
     _derived_types = (bool,)
-    def __init__(self,value):
-        if value in ("true","True","TRUE","t","T","y","1",1):
+    def __init__(self, value):
+        if value in ("true", "True", "TRUE", "t", "T", "y", "1", 1):
             v = 1
-        elif value in ("false","False","FALSE","f","F","n","0",0):
+        elif value in ("false", "False", "FALSE", "f", "F", "n", "0", 0):
             v = 0
         else:
 	    # should not end up here
@@ -731,9 +731,9 @@ class pbs_bool(_generic_attr):
         # validates against the 'Rerunable' attribute entry of the
         # the server 'job' table
         _pbs_v1.validate_input("job", "Rerunable", str(v))
-        super(pbs_bool,self).__init__(v)
+        super(pbs_bool, self).__init__(v)
 
-    def __cmp__(self,value):
+    def __cmp__(self, value):
         iself = int(str(self))
 
         if value == None:
@@ -748,7 +748,7 @@ class pbs_bool(_generic_attr):
         else:
             return -1
 
-    def __nonzero__(self):
+    def __bool__(self):
         if int(str(self)) == 1:
             return True
         else:
@@ -758,51 +758,51 @@ class pbs_bool(_generic_attr):
         return int(str(self))
 
 class pbs_int(long):    
-    _derived_types = (int,long,float)
-    def __init__(self,value):
+    _derived_types = (int, int, float)
+    def __init__(self, value):
         # empty  string ("") also matched
         if value != "":
-            _pbs_v1.validate_input("job", "ctime", str(long(value)))
-        super(pbs_int,self).__init__(value)
+            _pbs_v1.validate_input("job", "ctime", str(int(value)))
+        super(pbs_int, self).__init__(value)
 
 class vnode_state(long):    
-    _derived_types = (int,long,float)
-    def __init__(self,value):
+    _derived_types = (int, int, float)
+    def __init__(self, value):
         # empty  string ("") also matched
         if value != "":
             if _pbs_v1.vnode_state_to_str(int(value)) == "":
                 raise BadAttributeValueError("invalid vnode state value '%s'" % (value,))
 
-        super(long,self).__init__(value)
+        super(int, self).__init__(value)
 
-    def __add__(self,val):
+    def __add__(self, val):
         if _pbs_v1.vnode_state_to_str(val) == "":
             raise BadAttributeValueError("invalid vnode state value '%d'" % (val,))
         return (self | val)
 
-    def __sub__(self,val):
+    def __sub__(self, val):
         if _pbs_v1.vnode_state_to_str(val) == "":
             raise BadAttributeValueError("invalid vnode state value '%d'" % (val,))
         return (self & ~val)
 
 class pbs_str(str):
     _derived_types = (str,)
-    def __init__(self,value):
+    def __init__(self, value):
         _pbs_v1.validate_input("job", "Job_Owner", value)
-        super(pbs_str,self).__init__(value)
+        super(pbs_str, self).__init__(value)
 
 class pbs_float(float):
-    _derived_types = (int,long,float)
-    def __init__(self,value):
+    _derived_types = (int, int, float)
+    def __init__(self, value):
         _pbs_v1.validate_input("float", "", str(value))
-        super(pbs_float,self).__init__(value)
+        super(pbs_float, self).__init__(value)
 
 #: ---------------------  SPECIAL VALUE TYPES ---------------------
 class server_state(int):
     _derived_types = (int,)
-    def __new__(cls,value):
+    def __new__(cls, value):
         v = value
-        if isinstance(value, (str,)):
+        if isinstance(value, str):
             # convert to the internal long value
             if value == "Hot_Start":
                 v = _pbs_v1.SV_STATE_HOT
@@ -820,9 +820,9 @@ class server_state(int):
 
 class queue_type(int):
     _derived_types = (int,)
-    def __new__(cls,value):
+    def __new__(cls, value):
         v = value
-        if isinstance(value, (str,)):
+        if isinstance(value, str):
             # convert to the internal long value
             if (value == "Execution") or (value == "E"):
                 v = _pbs_v1.QTYPE_EXECUTION
@@ -835,9 +835,9 @@ class queue_type(int):
 
 class job_state(int):
     _derived_types = (int,)
-    def __new__(cls,value):
+    def __new__(cls, value):
         v = value
-        if isinstance(value, (str,)):
+        if isinstance(value, str):
             # convert to the internal long value
             if value == "T":
                 v = _pbs_v1.JOB_STATE_TRANSIT
@@ -874,9 +874,9 @@ class acl(_generic_attr):
     Format: pbs.acl("[+|-]<entity>][,...]")
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         _pbs_v1.validate_input("resv", "Authorized_Users", value)
-        super(acl,self).__init__(value)
+        super(acl, self).__init__(value)
 
 class select(_generic_attr):
     """
@@ -891,9 +891,9 @@ class select(_generic_attr):
 
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         _pbs_v1.validate_input("resc", "select", value)
-        super(select,self).__init__(value)
+        super(select, self).__init__(value)
 
 class place(_generic_attr):
     """
@@ -910,23 +910,23 @@ class place(_generic_attr):
 	s = s + :group=host  append to string
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         _pbs_v1.validate_input("resc", "place", value)
-        super(place,self).__init__(value)
+        super(place, self).__init__(value)
 
 class vnode_sharing(long):    
-    _derived_types = (int,long,float)
-    def __init__(self,value):
+    _derived_types = (int, int, float)
+    def __init__(self, value):
         if _pbs_v1.vnode_sharing_to_str(int(value)) == "":
             raise BadAttributeValueError("invalid vnode sharing value '%s'" % (value,))
-        super(long,self).__init__(value)
+        super(int, self).__init__(value)
 
 class vnode_ntype(long):    
-    _derived_types = (int,long,float)
-    def __init__(self,value):
+    _derived_types = (int, int, float)
+    def __init__(self, value):
         if _pbs_v1.vnode_ntype_to_str(int(value)) == "":
             raise BadAttributeValueError("invalid vnode ntype value '%s'" % (value,))
-        super(long,self).__init__(value)
+        super(int, self).__init__(value)
 
 class exec_host(_generic_attr):
     """
@@ -935,9 +935,9 @@ class exec_host(_generic_attr):
 	    where N are C are ints.
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         _pbs_v1.validate_input("job", "exec_host", value)
-        super(exec_host,self).__init__(value)
+        super(exec_host, self).__init__(value)
 
 class checkpoint(_generic_attr):
     """
@@ -947,9 +947,9 @@ class checkpoint(_generic_attr):
 
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         _pbs_v1.validate_input("job", "Checkpoint", value)
-        super(checkpoint,self).__init__(value)
+        super(checkpoint, self).__init__(value)
 
 class depend(_generic_attr):
     """
@@ -962,9 +962,9 @@ class depend(_generic_attr):
 		afterany", "before", "beforeok", and "beforenotok.
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         _pbs_v1.validate_input("job", "depend", value)
-        super(depend,self).__init__(value)
+        super(depend, self).__init__(value)
 
 class group_list(_generic_attr):
     """
@@ -972,9 +972,9 @@ class group_list(_generic_attr):
     Format: pbs.group_list("<group_name>[@<host>][,<group_name>[@<host>]..]")
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         _pbs_v1.validate_input("job", "group_list", value)
-        super(group_list,self).__init__(value)
+        super(group_list, self).__init__(value)
 
 class user_list(_generic_attr):
     """
@@ -982,49 +982,49 @@ class user_list(_generic_attr):
     Format: pbs.user_list("<user>[@<host>][,<user>@<host>...]")
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         _pbs_v1.validate_input("job", "User_List", value)
-        super(user_list,self).__init__(value)
+        super(user_list, self).__init__(value)
 
 class path(_generic_attr):
-    _derived_types = (_generic_attr,str)
-    def __init__(self,value):
+    _derived_types = (_generic_attr, str)
+    def __init__(self, value):
         # for windows
         val = value
-        if isinstance(value, (str,)):
+        if isinstance(value, str):
             val = value.replace("\\", "/")
         _pbs_v1.validate_input("job", "Output_Path", val)
-        super(path,self).__init__(val)
+        super(path, self).__init__(val)
 
 class sandbox(_generic_attr):
-    _derived_types = (_generic_attr,str)
-    def __init__(self,value):
+    _derived_types = (_generic_attr, str)
+    def __init__(self, value):
         _pbs_v1.validate_input("job", "sandbox", value)
-        super(sandbox,self).__init__(value)
+        super(sandbox, self).__init__(value)
 
 class priority(_generic_attr):
-    _derived_types = (_generic_attr,int)
-    def __init__(self,value):
+    _derived_types = (_generic_attr, int)
+    def __init__(self, value):
         _pbs_v1.validate_input("job", "Priority", str(value))
-        super(priority,self).__init__(value)
+        super(priority, self).__init__(value)
 
 class name(_generic_attr):
-    _derived_types = (_generic_attr,str)
-    def __init__(self,value):
+    _derived_types = (_generic_attr, str)
+    def __init__(self, value):
         # Validate only if set inside a hook script and not internally
         # by PBS.
         if _pbs_v1.in_python_mode():
             _pbs_v1.validate_input("job", "Job_Name", value)
-        super(name,self).__init__(value)
+        super(name, self).__init__(value)
 
 class project(_generic_attr):
-    _derived_types = (_generic_attr,str)
-    def __init__(self,value):
+    _derived_types = (_generic_attr, str)
+    def __init__(self, value):
         # Validate only if set inside a hook script and not internally
         # by PBS.
         if _pbs_v1.in_python_mode():
             _pbs_v1.validate_input("job", "project", value)
-        super(project,self).__init__(value)
+        super(project, self).__init__(value)
 
 class join_path(_generic_attr):
     """
@@ -1032,9 +1032,9 @@ class join_path(_generic_attr):
     Format: pbs.join_path({oe|eo|n}) 
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         _pbs_v1.validate_input("job", "Join_Path", value)
-        super(join_path,self).__init__(value)
+        super(join_path, self).__init__(value)
 
 class path_list(_generic_attr):
     """
@@ -1042,13 +1042,13 @@ class path_list(_generic_attr):
     Format: pbs.path_list("<path>[@<host>][,<path>@<host> ...]")
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
 	# for windows
         val = value
-        if isinstance(value, (str,)):
+        if isinstance(value, str):
             val = value.replace("\\", "/")
         _pbs_v1.validate_input("job", "Shell_Path_List", val)
-        super(path_list,self).__init__(val)
+        super(path_list, self).__init__(val)
 
 class hold_types(_generic_attr):
     """
@@ -1058,15 +1058,15 @@ class hold_types(_generic_attr):
 
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         """
         Instantiates an pbs.holdtypes() value.
         """
         _pbs_v1.validate_input("job", "Hold_Types", value)
         self.opval = "__init__"
-        super(hold_types,self).__init__(value)
+        super(hold_types, self).__init__(value)
 
-    def __add__(self,val):
+    def __add__(self, val):
         """
 	Returns a new value containing the Hold_Types values in
 	self._value plus the the Hold_Types values in val.
@@ -1082,14 +1082,14 @@ class hold_types(_generic_attr):
             sdict[c] = ""
         for c in str(val):
             sdict[c] = ""
-        nval = "".join(sdict.keys())
+        nval = "".join(list(sdict.keys()))
 
         # nval will get validated inside hold_types instantiation
         h = hold_types(nval)
         h.opval = "__add__"
         return h
 
-    def __sub__(self,val):
+    def __sub__(self, val):
         """
         Returns a new value containing the Hold_Types values
         in self._value, but with the Hold_Types values in val
@@ -1105,10 +1105,10 @@ class hold_types(_generic_attr):
         for c in self._value:
             sdict[c] = ""
         for c in str(val):
-            if c in sdict.keys():
+            if c in list(sdict.keys()):
                 del sdict[c]
                 deleted_vals += c
-        nval = "".join(sdict.keys())
+        nval = "".join(list(sdict.keys()))
 
         # nval will get validated inside hold_types instantiation
         if nval == "":
@@ -1127,9 +1127,9 @@ class keep_files(_generic_attr):
 
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         _pbs_v1.validate_input("job", "Keep_Files", value)
-        super(keep_files,self).__init__(value)
+        super(keep_files, self).__init__(value)
 
 class mail_points(_generic_attr):
     """
@@ -1139,9 +1139,9 @@ class mail_points(_generic_attr):
 		<mail_points_string> is "a", "b", and/or "e", or n.
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         _pbs_v1.validate_input("job", "Mail_Points", value)
-        super(mail_points,self).__init__(value)
+        super(mail_points, self).__init__(value)
 
 class staging_list(_generic_attr):
     """
@@ -1152,13 +1152,13 @@ class staging_list(_generic_attr):
 			<local_path>@<remote_host>:<remote_path>
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         val = value
-        if isinstance(value, (str,)):
+        if isinstance(value, str):
             val = value.replace("\\", "/")
             val = val.replace("/,", "\\,")
         _pbs_v1.validate_input("job", "stagein", val)
-        super(staging_list,self).__init__(val)
+        super(staging_list, self).__init__(val)
 
 class range(_generic_attr):
     """
@@ -1169,9 +1169,9 @@ class range(_generic_attr):
 
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         _pbs_v1.validate_input("job", "array_indices_submitted", value)
-        super(range,self).__init__(value)
+        super(range, self).__init__(value)
 
 class state_count(_generic_attr):
     """
@@ -1179,11 +1179,11 @@ class state_count(_generic_attr):
     Format: pbs.state_count("Transit:<U> Queued:<V> Held:<W> Running:<X> Exiting:<Y> Begun:<Z>")
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
 	# validates against the 'state_account' attribute entry of the
         # the server 'server' table
         _pbs_v1.validate_input("server", "state_count", value)
-        super(state_count,self).__init__(value)
+        super(state_count, self).__init__(value)
 
 class license_count(_generic_attr):
     """
@@ -1191,9 +1191,9 @@ class license_count(_generic_attr):
     Format: pbs.license_count("Avail_Global:<W> Avail_Local:<X> Used:<Y> High_Use:<Z>")
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         _pbs_v1.validate_input("server", "license_count", value)
-        super(license_count,self).__init__(value)
+        super(license_count, self).__init__(value)
 
 class route_destinations(_generic_attr):
     """
@@ -1204,11 +1204,11 @@ class route_destinations(_generic_attr):
 		"queue_name[@server_host[:port]]"
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
 	# validates against the 'state_account' attribute entry of the
         # the server 'queue' table
         _pbs_v1.validate_input("queue", "route_destinations", value)
-        super(route_destinations,self).__init__(value)
+        super(route_destinations, self).__init__(value)
 
 class args(_generic_attr):
     """
@@ -1218,9 +1218,9 @@ class args(_generic_attr):
 		Ex. pbs.args("-Wsuppress_mail=N r y")
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         _pbs_v1.validate_input("server", "default_qsub_arguments", value)
-        super(args,self).__init__(value)
+        super(args, self).__init__(value)
 
 class job_sort_formula(_generic_attr):
     """
@@ -1228,11 +1228,11 @@ class job_sort_formula(_generic_attr):
     Format: pbs.job_sort_formula(<string containing math formula>)
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         # treat as string for now
-        if not isinstance(value, (str,)):
+        if not isinstance(value, str):
             raise BadAttributeValueError("job_sort_formula value '%s' not a string" % (value,))
-        super(job_sort_formula,self).__init__(value)
+        super(job_sort_formula, self).__init__(value)
 
 class node_group_key(_generic_attr):
     """
@@ -1240,19 +1240,19 @@ class node_group_key(_generic_attr):
     Format: pbs.node_group_key(<resource>)
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         _pbs_v1.validate_input("queue", "node_group_key", value)
-        super(node_group_key,self).__init__(value)
+        super(node_group_key, self).__init__(value)
 
 class version(_generic_attr):
     """
     Represents a version information for PBS.
     Format: pbs.version(<pbs version string>)
     """
-    _derived_types = (str,_generic_attr,)
-    def __init__(self,value):
+    _derived_types = (str, _generic_attr,)
+    def __init__(self, value):
         _pbs_v1.validate_input("server", "pbs_version", value)
-        super(version,self).__init__(value)
+        super(version, self).__init__(value)
 
 class software(_generic_attr):
     """
@@ -1260,9 +1260,9 @@ class software(_generic_attr):
     Format: pbs.software(<software info string>)
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         _pbs_v1.validate_input("resc", "software", value)
-        super(software,self).__init__(value)
+        super(software, self).__init__(value)
 
 
 #:-------------------------------------------------------------------------
@@ -1290,13 +1290,13 @@ class pbs_resource(object):
         #: name could be an instance of pbs_resource, in that case we are
         #: actually creating a new instance of pbs_resource, this happens
         #: when the attributes are actually setup by parent.
-        if isinstance(name,(pbs_resource,)):
+        if isinstance(name, pbs_resource):
             name = name._name
             #: set all the attribute descriptors resc_attr to name
             for a in pbs_resource.attributes:
                 #: get the descriptor 
-                descr = getattr(pbs_resource,a)
-                if isinstance(descr,(PbsAttributeDescriptor,)):
+                descr = getattr(pbs_resource, a)
+                if isinstance(descr, PbsAttributeDescriptor):
                     descr._set_resc_atttr(name, is_entity)
                 #:
             #:
@@ -1317,7 +1317,7 @@ class pbs_resource(object):
 	
         d = pbs_resource.attributes.copy()
 
-        if pbs_resource._attributes_unknown.has_key(self):
+        if self in pbs_resource._attributes_unknown:
             # update pbs_resource list of attribute names to contain the
             # "unknown" names as well.
             d.update(pbs_resource._attributes_unknown[self])
@@ -1325,13 +1325,13 @@ class pbs_resource(object):
         for resc in d:
             if resc == '_name' or resc == '_has_value':
                 continue
-            v = getattr(self,resc)
+            v = getattr(self, resc)
             if (v != None) or (v == ""):
                 str_v = str(v)
                 if (str_v.find("\"") == -1) and (str_v.find(",") != -1):
-                    rv.append("%s=\"%s\"" % (resc,v))
+                    rv.append("%s=\"%s\"" % (resc, v))
                 else:
-                    rv.append("%s=%s" % (resc,v))
+                    rv.append("%s=%s" % (resc, v))
             #
         #
         return ",".join(rv)
@@ -1399,17 +1399,17 @@ class pbs_resource(object):
                     # we're in a mom hook, so no longer raising an exception here since if
                     # it's an unknown resource, we can now tell server to
                     # automatically add a custom resource.
-                    if not self._attributes_unknown.has_key(self):
+                    if self not in self._attributes_unknown:
                         self._attributes_unknown[self] = {}
                     # add the current attribute name to the "unknown" list
                     self._attributes_unknown[self].update({name : None})
                 else:
-                    if not self._attributes_unknown.has_key(self):
+                    if self not in self._attributes_unknown:
                         self._attributes_unknown[self] = {}
                     # add the current attribute name to the "unknown" list
                     self._attributes_unknown[self].update({name : None})
 
-        super(pbs_resource,self).__setattr__(name, value)
+        super(pbs_resource, self).__setattr__(name, value)
 
         # attributes that are set in python mode will be reflected in
         # _attributes_hook_set dictionary.
@@ -1418,7 +1418,7 @@ class pbs_resource(object):
         # if 'walltime' or 'mem' has been assigned a value within the hook
         # script, or been unset.
         if _pbs_v1.in_python_mode():
-            if not self._attributes_hook_set.has_key(self):
+            if self not in self._attributes_hook_set:
                 self._attributes_hook_set[self] = {}
             # using a dictionary value as easier to search for keys
             self._attributes_hook_set[self].update({name : None})
@@ -1432,7 +1432,7 @@ class pbs_resource(object):
         for resc in pbs_resource.attributes:
             if resc == '_name' or resc == '_has_value':
                 continue
-            v = getattr(self,resc)
+            v = getattr(self, resc)
             if v != None:
                 rv.append(resc) 
         #
@@ -1459,7 +1459,7 @@ class vchunk(object):
                 self.vnode_name = c
             else:
                 rs = c.split("=", 1)
-                descr = getattr(pbs_resource,rs[0])
+                descr = getattr(pbs_resource, rs[0])
                 self.chunk_resources[rs[0]] = descr._value_type[0](rs[1])
     #: m(__init__)
 
@@ -1481,9 +1481,9 @@ class exec_vnode(_generic_attr):
 
     """
     _derived_types = (_generic_attr,)
-    def __init__(self,value):
+    def __init__(self, value):
         _pbs_v1.validate_input("job", "exec_vnode", value)
-        super(exec_vnode,self).__init__(value)
+        super(exec_vnode, self).__init__(value)
         self.chunks = list()
         vals = value.split("+")
         i = 0

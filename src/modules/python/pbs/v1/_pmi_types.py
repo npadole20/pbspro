@@ -49,7 +49,7 @@ import sys
 import os
 import pbs
 from pbs.v1._pmi_utils import _get_hosts, _get_vnode_names, _running_excl
-from _exc_types import *
+from ._exc_types import *
 
 
 class InternalError(Exception):
@@ -84,13 +84,13 @@ class Power:
         try:
             _temp = __import__("pbs.v1._pmi_" + self.pmi_type,
                                globals(), locals(), ['Pmi'], -1)
-        except Exception, e:
+        except Exception as e:
             raise InternalError(
                 "could not import: " + self.pmi_type + ": " + str(e))
 
         try:
             self.__pmi = _temp.Pmi(self.__sitepk)
-        except Exception, e:
+        except Exception as e:
             raise InternalError(
                 "No such PMI: " + self.pmi_type + ": " + str(e))
 
@@ -160,7 +160,7 @@ class Power:
                     except:
                         pass
             return ret
-        except BackendError, e:
+        except BackendError as e:
             # get fresh set of profile names, ignore errors
             mynode = pbs.event().vnode_list[pbs.get_local_nodename()]
             if mynode.power_provisioning:
@@ -174,7 +174,7 @@ class Power:
                 except:
                     pass
             raise BackendError(e)
-        except InternalError, e:
+        except InternalError as e:
             # couldn't do activation so set vnode offline
             me = pbs.get_local_nodename()
             pbs.event().vnode_list[me].state += pbs.ND_OFFLINE

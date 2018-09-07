@@ -535,6 +535,13 @@ static char pbs_v1_module_doc[] =
     \t\n\
     ";
 
+static struct PyModuleDef pbs_v1_module = {
+	PyModuleDef_HEAD_INIT,
+	PBS_PYTHON_V1_MODULE_EXTENSION_NAME,
+	pbs_v1_module_doc,
+	-1,
+	pbs_v1_module_methods
+};
 
 /*
  * ----------------- EXTERNAL DEFINITIONS -----------------------
@@ -558,9 +565,11 @@ pbs_v1_module_init(void)
 	PyObject *m     = NULL; /* the module object, BORROWED ref */
 	PyObject *mdict = NULL; /* the module object, BORROWED ref */
 
-	m = Py_InitModule3(PBS_PYTHON_V1_MODULE_EXTENSION_NAME,
+	/* m = Py_InitModule3(PBS_PYTHON_V1_MODULE_EXTENSION_NAME,
 		pbs_v1_module_methods,
 		pbs_v1_module_doc);
+	*/
+	m = PyModule_Create(&pbs_v1_module);
 
 	if (m == NULL)
 		return m;
@@ -595,7 +604,7 @@ ERROR_EXIT:
  * 	module.
  *
  */
-void
+PyObject *
 pbs_v1_module_inittab(void)
 {
 	(void) pbs_v1_module_init();

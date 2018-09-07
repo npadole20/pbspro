@@ -667,7 +667,7 @@ int validate_job_formula(attribute *pattr, void *pobject, int actmode) {
 		"errmsg = \'\'\n"
 		"try:\n"
 		"    from math import *\n"
-		"except ImportError, e:\n"
+		"except ImportError as e:\n"
 		"    errnum=4\n"
 		"    errmsg=str(e)\n");
 	if (pbs_strcat(&script, &script_size, buf) == NULL) {

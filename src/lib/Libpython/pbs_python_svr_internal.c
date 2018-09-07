@@ -1955,7 +1955,7 @@ py_resource_string_value(pbs_resource_value *resc_val)
 
 	}
 	/* New reference returned below */
-	return PyString_FromString(ret_string);
+	return PyUnicode_FromString(ret_string);
 }
 
 /*
@@ -2924,11 +2924,11 @@ pbs_python_populate_svrattrl_from_python_class(PyObject *py_instance,
 								val_sec = duration_to_secs(val);
 								snprintf(the_val, val_buf_size, "%ld", val_sec);
 							}
-						} else if (PyLong_Check(py_resc) || PyInt_Check(py_resc)) {
+						} else if (PyLong_Check(py_resc) || PyLong_Check(py_resc)) {
 							snprintf(the_resc, sizeof(the_resc), "%s,long", resc);
 						} else if (PyFloat_Check(py_resc)) {
 							snprintf(the_resc, sizeof(the_resc), "%s,float", resc);
-						} else if (PyString_Check(py_resc)) {
+						} else if (PyUnicode_Check(py_resc)) {
 							/* this check should come first before the test of PP_ARST_IDX instance */
 							/* for a regular string is also an instance/subset of PP_ARST_IDX type */
 							snprintf(the_resc, sizeof(the_resc), "%s,string", resc);
@@ -5424,7 +5424,7 @@ _pbs_python_event_set(unsigned int hook_event, char *req_user, char *req_host,
 			Py_None);
 		(void)PyDict_SetItemString(py_event_param, PY_EVENT_PARAM_AOE,
 			Py_None);
-		py_vnode =  PyString_FromString(prov_vnode_info->pvnfo_vnode);
+		py_vnode =  PyUnicode_FromString(prov_vnode_info->pvnfo_vnode);
 		/* set vnode */
 		rc = PyDict_SetItemString(py_event_param, PY_EVENT_PARAM_VNODE, py_vnode);
 		if (rc == -1) {
@@ -5433,7 +5433,7 @@ _pbs_python_event_set(unsigned int hook_event, char *req_user, char *req_host,
 			goto event_set_exit;
 		}
 
-		py_aoe =  PyString_FromString(prov_vnode_info->pvnfo_aoe_req); /* NEW ref */
+		py_aoe =  PyUnicode_FromString(prov_vnode_info->pvnfo_aoe_req); /* NEW ref */
 		/* set aoe */
 		rc = PyDict_SetItemString(py_event_param, PY_EVENT_PARAM_AOE, py_aoe);
 		if (rc == -1) {
@@ -8350,7 +8350,7 @@ pbsv1mod_meth_duration_to_secs(PyObject *self, PyObject *args, PyObject *kwds)
 	}
 
 
-	return (PyInt_FromLong(num_secs));
+	return (PyLong_FromLong(num_secs));
 
 duration_error_exit:
 
@@ -8374,7 +8374,7 @@ const char pbsv1mod_meth_wordsize_doc[] =
 PyObject *
 pbsv1mod_meth_wordsize(void)
 {
-	return (PyInt_FromSsize_t((ssize_t)sizeof(int)));
+	return (PyLong_FromSsize_t((ssize_t)sizeof(int)));
 }
 
 /**
@@ -8936,7 +8936,7 @@ pbsv1mod_meth_vnode_state_to_str(PyObject *self, PyObject *args, PyObject *kwds)
 		return NULL;
 	}
 
-	return (PyString_FromString(vnode_state_to_str(state_bit)));
+	return (PyUnicode_FromString(vnode_state_to_str(state_bit)));
 }
 
 
@@ -8978,7 +8978,7 @@ pbsv1mod_meth_vnode_sharing_to_str(PyObject *self, PyObject *args, PyObject *kwd
 	}
 
 	vns = vnode_sharing_to_str(share_val);
-	return (PyString_FromString(vns?vns:""));
+	return (PyUnicode_FromString(vns?vns:""));
 }
 
 
@@ -9018,7 +9018,7 @@ pbsv1mod_meth_vnode_ntype_to_str(PyObject *self, PyObject *args, PyObject *kwds)
 		return NULL;
 	}
 
-	return (PyString_FromString(vnode_ntype_to_str(node_type)));
+	return (PyUnicode_FromString(vnode_ntype_to_str(node_type)));
 }
 
 /**
@@ -9242,7 +9242,7 @@ pbsv1mod_meth_get_python_daemon_name(void)
 	if (svr_interp_data.daemon_name == NULL)
 		Py_RETURN_NONE;
 
-	return (PyString_FromString(svr_interp_data.daemon_name));
+	return (PyUnicode_FromString(svr_interp_data.daemon_name));
 }
 
 const char pbsv1mod_meth_str_to_vnode_state_doc[] =
@@ -9281,7 +9281,7 @@ pbsv1mod_meth_str_to_vnode_state(PyObject *self, PyObject *args, PyObject *kwds)
 		return NULL;
 	}
 
-	return (PyString_FromFormat("%d", str_to_vnode_state(state_str)));
+	return (PyUnicode_FromFormat("%d", str_to_vnode_state(state_str)));
 }
 
 const char pbsv1mod_meth_str_to_vnode_ntype_doc[] =
@@ -9320,7 +9320,7 @@ pbsv1mod_meth_str_to_vnode_ntype(PyObject *self, PyObject *args, PyObject *kwds)
 		return NULL;
 	}
 
-	return (PyString_FromFormat("%d", str_to_vnode_ntype(type_str)));
+	return (PyUnicode_FromFormat("%d", str_to_vnode_ntype(type_str)));
 }
 
 const char pbsv1mod_meth_str_to_vnode_sharing_doc[] =
@@ -9359,7 +9359,7 @@ pbsv1mod_meth_str_to_vnode_sharing(PyObject *self, PyObject *args, PyObject *kwd
 		)) {
 		return NULL;
 	}
-	return (PyString_FromFormat("%d", str_to_vnode_sharing(share_str)));
+	return (PyUnicode_FromFormat("%d", str_to_vnode_sharing(share_str)));
 }
 
 
@@ -9388,7 +9388,7 @@ pbsv1mod_meth_get_pbs_server_name(void)
 	if (server_host[0] == '\0')
 		Py_RETURN_NONE;
 
-	return (PyString_FromString(server_host));
+	return (PyUnicode_FromString(server_host));
 }
 
 
@@ -9416,7 +9416,7 @@ const char pbsv1mod_meth_get_local_host_name_doc[] =
 PyObject *
 pbsv1mod_meth_get_local_host_name(void)
 {
-	return (PyString_FromString((char *)svr_interp_data.local_host_name));
+	return (PyUnicode_FromString((char *)svr_interp_data.local_host_name));
 }
 
 /**
@@ -11427,7 +11427,10 @@ pbsv1mod_meth_get_server_data_fp(void)
 	if (hook_debug.data_fp == NULL)
 		Py_RETURN_NONE;
 
-	fp_obj = PyFile_FromFile(hook_debug.data_fp, hook_debug.data_file, "w", NULL);
+	int data_fd = fileno(hook_debug.data_fp);
+
+	fp_obj = PyFile_FromFd(data_fd, hook_debug.data_file, "w", -1,
+			NULL, NULL, NULL, 1);
 	if (fp_obj == NULL)
 		Py_RETURN_NONE;
 
@@ -11540,7 +11543,7 @@ pbs_python_set_os_environ(char *env_var, char *env_val)
 		}
 	} else {
 		/* if sucess we get a NEW ref */
-		if ((pystr_env_val = PyString_FromString(env_val)) == NULL) {
+		if ((pystr_env_val = PyUnicode_FromString(env_val)) == NULL) {
 			snprintf(log_buffer, sizeof(log_buffer),
 				"%s:creating pystr_env_val <%s>",
 				__func__, env_val);

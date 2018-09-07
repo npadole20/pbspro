@@ -43,7 +43,7 @@ __doc__ = """
 This module captures all the python types representing the PBS Server objects
 (server,queue,job,resv, etc.)
 """
-from _base_types import (PbsAttributeDescriptor, PbsReadOnlyDescriptor,
+from ._base_types import (PbsAttributeDescriptor, PbsReadOnlyDescriptor,
                          pbs_resource, pbs_bool, _LOG,
                          )
 import _pbs_v1
@@ -51,7 +51,7 @@ from _pbs_v1 import (_event_accept, _event_reject,
                     _event_param_mod_allow, _event_param_mod_disallow,
                     iter_nextfunc)
 
-from _exc_types import *
+from ._exc_types import *
 
 NAS_mod = 0
 
@@ -192,39 +192,39 @@ def pbs_statobj(type, name=None, connect_server=None, filter_queue=None):
                         v=int(pbs_bool(v))
 
                 if(r):
-                    pr=getattr(obj,n)
+                    pr=getattr(obj, n)
 
                     # instantiate Resource_List object if not set
                     if( pr == None):
-                        setattr(obj,n)
+                        setattr(obj, n)
 
-                    pr=getattr(obj,n)
+                    pr=getattr(obj, n)
                     if (pr == None):
                         _pbs_v1.logmsg(_pbs_v1.LOG_DEBUG,
                                          "pbs_statobj: missing %s" % (n))
-                        a=a.next
+                        a=a.__next__
                         continue
 
                     vo=getattr(pr, r)
                     if( vo == None ):
-                        setattr(pr,r,v)
+                        setattr(pr, r, v)
                         if server_data_fp:
-                            server_data_fp.write("%s.%s[%s]=%s\n" %(header_str,n,r,v))
+                            server_data_fp.write("%s.%s[%s]=%s\n" %(header_str, n, r, v))
                     else:
                         # append value...
                         # example: "select=1:ncpus=1,ncpus=1,nodect=1,place=pack"
                         vl=[vo, v]
                         setattr(pr, r, ",".join(vl))        
                         if server_data_fp:
-                            server_data_fp.write("%s.%s[%s]=%s\n" % (header_str, n,r,",".join(vl)))
+                            server_data_fp.write("%s.%s[%s]=%s\n" % (header_str, n, r, ",".join(vl)))
 
                 else:
-                    vo=getattr(obj,n)
+                    vo=getattr(obj, n)
 
                     if( vo == None ):
-                        setattr(obj,n,v)
+                        setattr(obj, n, v)
                         if server_data_fp:
-                            server_data_fp.write("%s.%s=%s\n" %(header_str,n,v))
+                            server_data_fp.write("%s.%s=%s\n" %(header_str, n, v))
                     else:
                         # append value        
                         vl=[vo, v]
@@ -232,9 +232,9 @@ def pbs_statobj(type, name=None, connect_server=None, filter_queue=None):
                         if server_data_fp:
                             server_data_fp.write("%s.%s=%s\n" % (header_str, n, ",".join(vl)))
 
-                a=a.next
+                a=a.__next__
   
-            b=b.next
+            b=b.__next__
 
         pbs_disconnect(con)
         _pbs_v1.set_python_mode()
@@ -286,10 +286,10 @@ class _job(object):
         elif ((name != "_rerun") and (name != "_delete") and \
               (name != "_checkpointed") and (name != "_msmom") and \
               (name != "_stdout_file") and (name != "_stderr_file") and \
-                                 not _job.attributes.has_key(name)):
+                                 name not in _job.attributes):
             raise UnsetAttributeNameError("job attribute '%s' not found" % (name,))
 
-        super(_job,self).__setattr__(name, value)
+        super(_job, self).__setattr__(name, value)
 
         # attributes that are set in python mode will be reflected in
         # _attributes_hook_set dictionary.
@@ -299,7 +299,7 @@ class _job(object):
         # script, or been unset.
 
         if _pbs_v1.in_python_mode():
-            if not self._attributes_hook_set.has_key(self):
+            if self not in self._attributes_hook_set:
                 self._attributes_hook_set[self] = {}
             # using a dictionary value as easier to search for keys
             self._attributes_hook_set[self].update({name : None})
@@ -338,7 +338,7 @@ class _job(object):
         return self._stderr_file
     #: m(in_ms_mom)
 
-_job.id = PbsAttributeDescriptor(_job, 'id', "",(str,))
+_job.id = PbsAttributeDescriptor(_job, 'id', "", (str,))
 _job._connect_server = PbsAttributeDescriptor(_job, '_connect_server', "", (str,))
 #: C(job)
 
@@ -375,9 +375,9 @@ class _vnode(object):
             if _pbs_v1.in_python_mode() and \
                                 hasattr(self, "_readonly") and not value:
                  raise BadAttributeValueError("_readonly can only be set to True!")
-        elif not _vnode.attributes.has_key(name):
+        elif name not in _vnode.attributes:
             raise UnsetAttributeNameError("vnode attribute '%s' not found" % (name,))
-        super(_vnode,self).__setattr__(name, value)
+        super(_vnode, self).__setattr__(name, value)
 
         # attributes that are set in python mode will be reflected in
         # _attributes_hook_set dictionary.
@@ -387,7 +387,7 @@ class _vnode(object):
         # script, or been unset.
 
         if _pbs_v1.in_python_mode() and (name != "_connect_server"):
-            if not self._attributes_hook_set.has_key(self):
+            if self not in self._attributes_hook_set:
                 self._attributes_hook_set[self] = {}
             # using a dictionary value as easier to search for keys
             self._attributes_hook_set[self].update({name : None})
@@ -396,7 +396,7 @@ class _vnode(object):
     #: m(__seattr__)        
     
 
-_vnode.name = PbsAttributeDescriptor(_vnode, 'name', "",(str,))
+_vnode.name = PbsAttributeDescriptor(_vnode, 'name', "", (str,))
 _vnode._connect_server = PbsAttributeDescriptor(_vnode, '_connect_server', "", (str,))
 #: C(vnode)
 
@@ -438,14 +438,14 @@ class _resv(object):
             if _pbs_v1.in_python_mode() and \
                                     hasattr(self, "_readonly") and not value:
                  raise BadAttributeValueError("_readonly can only be set to True!")
-        elif not _resv.attributes.has_key(name):
+        elif name not in _resv.attributes:
             raise UnsetAttributeNameError("resv attribute '%s' not found" % (name,))
         elif name in _resv.attributes_readonly and \
                                 _pbs_v1.in_python_mode() and \
                                                 _pbs_v1.in_site_hook():
             # readonly under a SITE hook
             raise BadAttributeValueError("resv attribute '%s' is readonly" % (name,))
-        super(_resv,self).__setattr__(name, value)
+        super(_resv, self).__setattr__(name, value)
 
         # attributes that are set in python mode will be reflected in
         # _attributes_hook_set dictionary.
@@ -455,7 +455,7 @@ class _resv(object):
         # the hook script, or been unset.
 
         if _pbs_v1.in_python_mode():
-            if not self._attributes_hook_set.has_key(self):
+            if self not in self._attributes_hook_set:
                 self._attributes_hook_set[self] = {}
             # using a dictionary value as easier to search for keys
             self._attributes_hook_set[self].update({name : None})
@@ -495,9 +495,9 @@ class _queue(object):
             if _pbs_v1.in_python_mode() and \
                             hasattr(self, "_readonly") and not value:
                  raise BadAttributeValueError("_readonly can only be set to True!")
-        elif not _queue.attributes.has_key(name):
+        elif name not in _queue.attributes:
             raise UnsetAttributeNameError("queue attribute '%s' not found" % (name,))
-        super(_queue,self).__setattr__(name, value)
+        super(_queue, self).__setattr__(name, value)
     #: m(__setattr__)
 
     def job(self, jobid):
@@ -705,9 +705,9 @@ class _server(object):
             if _pbs_v1.in_python_mode() and \
                             hasattr(self, "_readonly") and not value:
                  raise BadAttributeValueError("_readonly can only be set to True!")
-        elif not _server.attributes.has_key(name):
+        elif name not in _server.attributes:
             raise UnsetAttributeNameError("server attribute '%s' not found" % (name,))
-        super(_server,self).__setattr__(name, value)
+        super(_server, self).__setattr__(name, value)
     #: m(__setattr__)
 
     
@@ -778,7 +778,7 @@ class _event(object):
         """
         _event_accept()
         _event_param_mod_disallow()
-        raise SystemExit, str(ecode)
+        raise SystemExit(str(ecode))
     #: m(__accept__)
 
     def reject(self, emsg="", ecode=255):
@@ -795,7 +795,7 @@ class _event(object):
         """
         _event_reject(emsg)
         _event_param_mod_disallow()
-        raise SystemExit, str(ecode)
+        raise SystemExit(str(ecode))
     #: m(__reject__)
 
     def __getattr__(self, key):
@@ -816,9 +816,9 @@ class _event(object):
                 return
             else:
                 raise BadAttributeValueError("event attribute '%s' is readonly" % (name,))
-        elif not _event.attributes.has_key(name):
+        elif name not in _event.attributes:
             raise UnsetAttributeNameError("event attribute '%s' not found" % (name,))
-        super(_event,self).__setattr__(name, value)
+        super(_event, self).__setattr__(name, value)
     #: m(__setattr__)
     
 #: C(event)
@@ -1003,13 +1003,13 @@ class pbs_iter(object):
 
 		if _pbs_v1.use_static_data():
 		    if( self.type == "jobs" ):
-			return _pbs_v1.get_job_static(self.bs.next(), self._connect_server, "")
+			return _pbs_v1.get_job_static(next(self.bs), self._connect_server, "")
 		    elif( self.type == "queues" ):
-			return _pbs_v1.get_queue_static(self.bs.next(), self._connect_server)
+			return _pbs_v1.get_queue_static(next(self.bs), self._connect_server)
 		    elif( self.type == "resvs" ):
-			return _pbs_v1.get_resv_static(self.bs.next(), self._connect_server)
+			return _pbs_v1.get_resv_static(next(self.bs), self._connect_server)
 		    elif( self.type == "vnodes" ):
-			return _pbs_v1.get_vnode_static(self.bs.next(), self._connect_server)
+			return _pbs_v1.get_vnode_static(next(self.bs), self._connect_server)
 		    else:        
 			_pbs_v1.logmsg(_pbs_v1.LOG_DEBUG,
 			    "pbs_iter/next: Bad object iterator type %s" % (self.type))
@@ -1067,48 +1067,48 @@ class pbs_iter(object):
 				v=int(pbs_bool(v))
 
 			if(r):
-			    pr=getattr(obj,n)
+			    pr=getattr(obj, n)
 
 			    # if resource list does not exist, then set it
 			    if( pr == None):
-				setattr(obj,n)
+				setattr(obj, n)
 
-			    pr=getattr(obj,n)
+			    pr=getattr(obj, n)
 			    if (pr == None):
 				_pbs_v1.logmsg(_pbs_v1.LOG_DEBUG,
 					       "pbs_statobj: missing %s" % (n))
-				a=a.next
+				a=a.__next__
 				continue
 
 			    vo=getattr(pr, r)
 			    if( vo == None ):
-				setattr(pr,r,v)
+				setattr(pr, r, v)
 				if server_data_fp:
-				    server_data_fp.write("%s.%s[%s]=%s\n" %(header_str,n,r,v))
+				    server_data_fp.write("%s.%s[%s]=%s\n" %(header_str, n, r, v))
 			    else:
 				# append value:
 				# example: "select=1:ncpus=1,ncpus=1,nodect=1,place=pack"
 				vl=[vo, v]
 				setattr(pr, r, ",".join(vl))
 				if server_data_fp:
-				    server_data_fp.write("%s.%s[%s]=%s\n" % (header_str, n,r,",".join(vl)))
+				    server_data_fp.write("%s.%s[%s]=%s\n" % (header_str, n, r, ",".join(vl)))
 
 			else:
-			    vo=getattr(obj,n)
+			    vo=getattr(obj, n)
 
 			    if( vo == None ):
-				setattr(obj,n,v)
+				setattr(obj, n, v)
 				if server_data_fp:
-				    server_data_fp.write("%s.%s=%s\n" %(header_str,n,v))
+				    server_data_fp.write("%s.%s=%s\n" %(header_str, n, v))
 			    else:
 				vl=[vo, v]
 				setattr(obj, n, ",".join(vl))
 				if server_data_fp:
 				    server_data_fp.write("%s.%s=%s\n" % (header_str, n, ",".join(vl)))
 
-			a=a.next
+			a=a.__next__
       
-		self.bs=b.next
+		self.bs=b.__next__
 
 		_pbs_v1.set_python_mode()
 		return obj
@@ -1126,13 +1126,13 @@ class pbs_iter(object):
 
 		if _pbs_v1.use_static_data():
 		    if( self.type == "jobs" ):
-			return _pbs_v1.get_job_static(self.bs.next(), self._connect_server, "")
+			return _pbs_v1.get_job_static(next(self.bs), self._connect_server, "")
 		    elif( self.type == "queues" ):
-			return _pbs_v1.get_queue_static(self.bs.next(), self._connect_server)
+			return _pbs_v1.get_queue_static(next(self.bs), self._connect_server)
 		    elif( self.type == "resvs" ):
-			return _pbs_v1.get_resv_static(self.bs.next(), self._connect_server)
+			return _pbs_v1.get_resv_static(next(self.bs), self._connect_server)
 		    elif( self.type == "vnodes" ):
-			return _pbs_v1.get_vnode_static(self.bs.next(), self._connect_server)
+			return _pbs_v1.get_vnode_static(next(self.bs), self._connect_server)
 		    else:        
 			_pbs_v1.logmsg(_pbs_v1.LOG_DEBUG,
 			    "pbs_iter/next: Bad object iterator type %s" % (self.type))
@@ -1186,48 +1186,48 @@ class pbs_iter(object):
 				v=int(pbs_bool(v))
 
 			if(r):
-			    pr=getattr(obj,n)
+			    pr=getattr(obj, n)
 
 			    # if resource list does not exist, then set it
 			    if( pr == None):
-				setattr(obj,n)
+				setattr(obj, n)
 
-			    pr=getattr(obj,n)
+			    pr=getattr(obj, n)
 			    if (pr == None):
 				_pbs_v1.logmsg(_pbs_v1.LOG_DEBUG,
 					       "pbs_statobj: missing %s" % (n))
-				a=a.next
+				a=a.__next__
 				continue
 
 			    vo=getattr(pr, r)
 			    if( vo == None ):
-				setattr(pr,r,v)
+				setattr(pr, r, v)
 				if server_data_fp:
-				    server_data_fp.write("%s.%s[%s]=%s\n" %(header_str,n,r,v))
+				    server_data_fp.write("%s.%s[%s]=%s\n" %(header_str, n, r, v))
 			    else:
 				# append value:
 				# example: "select=1:ncpus=1,ncpus=1,nodect=1,place=pack"
 				vl=[vo, v]
 				setattr(pr, r, ",".join(vl))
 				if server_data_fp:
-				    server_data_fp.write("%s.%s[%s]=%s\n" % (header_str, n,r,",".join(vl)))
+				    server_data_fp.write("%s.%s[%s]=%s\n" % (header_str, n, r, ",".join(vl)))
 
 			else:
-			    vo=getattr(obj,n)
+			    vo=getattr(obj, n)
 
 			    if( vo == None ):
-				setattr(obj,n,v)
+				setattr(obj, n, v)
 				if server_data_fp:
-				    server_data_fp.write("%s.%s=%s\n" %(header_str,n,v))
+				    server_data_fp.write("%s.%s=%s\n" %(header_str, n, v))
 			    else:
 				vl=[vo, v]
 				setattr(obj, n, ",".join(vl))
 				if server_data_fp:
 				    server_data_fp.write("%s.%s=%s\n" % (header_str, n, ",".join(vl)))
 
-			a=a.next
+			a=a.__next__
       
-		self.bs=b.next
+		self.bs=b.__next__
 
 		_pbs_v1.set_python_mode()
 		return obj

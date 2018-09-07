@@ -4418,7 +4418,7 @@ formula_evaluate(char *formula, resource_resv *resresv, resource_req *resreq)
 
 	obj = PyMapping_GetItemString(dict, "_PBS_PYTHON_EXCEPTIONSTR_");
 	if (obj != NULL) {
-		str = PyString_AsString(obj);
+		str = PyUnicode_AsUTF8(obj);
 		if (str != NULL) {
 			if (strlen(str) > 0) { /* exception happened */
 				sprintf(errbuf,

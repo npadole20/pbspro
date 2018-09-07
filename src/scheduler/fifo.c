@@ -207,10 +207,10 @@ schedinit(void)
 	path = PySys_GetObject("path");
 
 	snprintf(buf, sizeof(buf), "%s/python/lib/python2.7", pbs_conf.pbs_exec_path);
-	PyList_Append(path, PyString_FromString(buf));
+	PyList_Append(path, PyUnicode_FromString(buf));
 
 	snprintf(buf, sizeof(buf), "%s/python/lib/python2.7/lib-dynload", pbs_conf.pbs_exec_path);
-	PyList_Append(path, PyString_FromString(buf));
+	PyList_Append(path, PyUnicode_FromString(buf));
 
 	PySys_SetObject("path", path);
 
@@ -219,7 +219,7 @@ schedinit(void)
 		"ex = None\n"
 		"try:\n"
 			"\tfrom math import *\n"
-		"except ImportError, ex:\n"
+		"except ImportError as ex:\n"
 			"\t_err = str(ex)");
 
 	module = PyImport_AddModule("__main__");
@@ -228,7 +228,7 @@ schedinit(void)
 	errstr = NULL;
 	obj = PyMapping_GetItemString(dict, "_err");
 	if (obj != NULL) {
-		errstr = PyString_AsString(obj);
+		errstr = PyUnicode_AsUTF8(obj);
 		if (errstr != NULL) {
 			if (strlen(errstr) > 0) {
 				snprintf(errMsg, sizeof(errMsg), " %s. Python is unlikely to work properly.", errstr);

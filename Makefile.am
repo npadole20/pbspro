@@ -38,7 +38,8 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = buildutils src doc test
+#removed test directory from subdirs as ptl is not yet in Py3
+SUBDIRS = buildutils src doc
 EXTRA_DIST = \
 	COPYRIGHT \
 	INSTALL \

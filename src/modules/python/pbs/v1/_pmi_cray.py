@@ -520,7 +520,8 @@ class Pmi:
                 states = n["data"]["PWR_Attrs"][0]["PWR_AttrValueCapabilities"]
                 for s in states:
                     if int(s) != 0:
-                        cmd = "set_sleep_state_limit --nids " + str(nid) + " --limit " + str(s)
+                        cmd = "set_sleep_state_limit --nids " + \
+                            str(nid) + " --limit " + str(s)
                         launch(func, cmd)
                         sleep_time = random.randint(1, 10)
                         time.sleep(sleep_time)
@@ -539,7 +540,8 @@ class Pmi:
                 states = n["data"]["PWR_Attrs"][0]["PWR_AttrValueCapabilities"]
                 for s in reversed(states):
                     if int(s) != 0:
-                        cmd = "set_sleep_state_limit --nids " + str(nid) + " --limit " + str(s)
+                        cmd = "set_sleep_state_limit --nids " + \
+                            str(nid) + " --limit " + str(s)
                         launch(func, cmd)
                         sleep_time = random.randint(1, 10)
                         time.sleep(sleep_time)

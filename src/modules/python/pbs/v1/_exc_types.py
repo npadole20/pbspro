@@ -42,39 +42,34 @@ This module introduces all the exception for the PBS/Python interaction
 """
 
 __all__ = [
-    'EventIncompatibleError',
-    'UnsetAttributeNameError',
-    'BadAttributeValueTypeError',
-    'BadAttributeValueError',
-    'UnsetResourceNameError',
-    'BadResourceValueTypeError',
-    'BadResourceValueError'
-]
-
+            'EventIncompatibleError',
+            'UnsetAttributeNameError',
+            'BadAttributeValueTypeError',
+            'BadAttributeValueError',
+            'UnsetResourceNameError',
+            'BadResourceValueTypeError',
+            'BadResourceValueError'
+          ]
 
 class EventIncompatibleError(Exception):
     pass
 
-
 class UnsetAttributeNameError(Exception):
     pass
-
 
 class BadAttributeValueTypeError(Exception):
     pass
 
-
 class BadAttributeValueError(Exception):
     pass
-
 
 class UnsetResourceNameError(Exception):
     pass
 
-
 class BadResourceValueTypeError(Exception):
     pass
 
-
 class BadResourceValueError(Exception):
     pass
+
+

@@ -40,75 +40,66 @@
 __doc__ = """
 All Python representation of internal PBS attribute structures.
 """
-# All types available when doing a
+# All types available when doing a 
 __all__ = (
-    'acl_group_enable',
-    'acl_groups',
-    'acl_host_enable',
-    'hosts',
-    'acl_user_enable',
-    'enabled',
-    'from_route_only',
-    'max_array_size',
-    'max_queuable',
-    'max_running'
-)
+           'acl_group_enable',
+           'acl_groups',
+           'acl_host_enable',
+           'hosts',
+           'acl_user_enable',
+           'enabled',
+           'from_route_only',
+           'max_array_size',
+           'max_queuable',
+           'max_running'
+           )
 
 #from _pbs_v1 import _attr
 _attr = object
-#                            (BEGIN) QUEUE  ATTRIBUTES
-
+#                            (BEGIN) QUEUE  ATTRIBUTES 
 
 class acl_group_enable(_attr):
     pass
 
-
 class acl_groups(_attr):
     pass
-
 
 class acl_host_enable(_attr):
     pass
 
-
 class hosts(_attr):
     pass
-
 
 class acl_user_enable(_attr):
     pass
 
-
 class acl_users(_attr):
     pass
-
 
 class enabled(_attr):
     pass
 
-
 class from_route_only(_attr):
     pass
-
 
 class max_array_size(_attr):
     pass
 
-
 class max_queuable(_attr):
     pass
-
 
 class max_running(_attr):
     pass
 
-
 class node_group_key(_attr):
     pass
-
 
 class Priority(_attr):
     pass
 
 
-#                            (END) QUEUE  ATTRIBUTES
+
+
+
+#                            (END) QUEUE  ATTRIBUTES 
+

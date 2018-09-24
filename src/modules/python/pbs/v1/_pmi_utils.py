@@ -66,7 +66,7 @@ def _pbs_conf(confvar):
             fp = open(pbsconf)
         except:
             pbs.logmsg(pbs.DEBUG, "%s: Unable to open conf file." % pbsconf)
-            return None
+            return None 
         else:
             for line in fp:
                 line = line.strip()
@@ -114,7 +114,7 @@ def _get_hosts(job):
     """
     hosts = str(job.exec_host2)
     pbs_nodes = sorted({x.partition(':')[0].partition('.')[0]
-                        for x in hosts.split('+')})
+                            for x in hosts.split('+')})
     return pbs_nodes
 
 
@@ -135,7 +135,7 @@ def _get_vnode_names(job):
     """
     exec_vnode = str(job.exec_vnode).replace("(", "").replace(")", "")
     vnodes = sorted({x.partition(':')[0]
-                     for x in exec_vnode.split('+')})
+                        for x in exec_vnode.split('+')})
     return vnodes
 
 

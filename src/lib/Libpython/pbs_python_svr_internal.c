@@ -635,35 +635,78 @@ pbs_python_setup_attr_get_value_type(attribute_def *attr_def_p, char *py_type)
 
 	/* careful long is overloadded so duration comes first */
 	if (TYPE_DURATION(attr_def_p->at_encode)) /* check for time type */
+	{
+		snprintf(log_buffer, LOG_BUF_SIZE-1,
+		"attr %s value type is TYPE_DURATION", attr_def_p->at_name);
+		log_buffer[LOG_BUF_SIZE-1] = '\0';
+		log_err(LOG_DEBUG, __func__, log_buffer);
 		return pbs_python_types_table[PP_TIME_IDX].t_class;
+	}
 
-	if (ATTR_IS_RESC(attr_def_p))
+	if (ATTR_IS_RESC(attr_def_p)){
+		snprintf(log_buffer, LOG_BUF_SIZE-1,
+		"attr %s value type is ATTR_IS_RESC", attr_def_p->at_name);
+		log_buffer[LOG_BUF_SIZE-1] = '\0';
+		log_err(LOG_DEBUG, __func__, log_buffer);
 		return pbs_python_types_table[PP_RESC_IDX].t_class;
+	}
 
-	if (TYPE_SIZE(attr_def_p->at_type))     /* check for SIZE type */
+	if (TYPE_SIZE(attr_def_p->at_type)){     /* check for SIZE type */
+		snprintf(log_buffer, LOG_BUF_SIZE-1,
+		"attr %s value type is TYPE_SIZE", attr_def_p->at_name);
+		log_buffer[LOG_BUF_SIZE-1] = '\0';
+		log_err(LOG_DEBUG, __func__, log_buffer);
 		return pbs_python_types_table[PP_SIZE_IDX].t_class;
-
-	if (TYPE_ACL(attr_def_p->at_type))      /* check for ACL type */
+	}
+	if (TYPE_ACL(attr_def_p->at_type)){      /* check for ACL type */
+		snprintf(log_buffer, LOG_BUF_SIZE-1,
+		"attr %s value type is TYPE_ACL", attr_def_p->at_name);
+		log_buffer[LOG_BUF_SIZE-1] = '\0';
+		log_err(LOG_DEBUG, __func__, log_buffer);
 		return pbs_python_types_table[PP_ACL_IDX].t_class;
-
-	if (TYPE_BOOL(attr_def_p->at_type))     /* check for BOOL type */
+	}
+	if (TYPE_BOOL(attr_def_p->at_type)){     /* check for BOOL type */
+		snprintf(log_buffer, LOG_BUF_SIZE-1,
+		"attr %s value type is TYPE_BOOL", attr_def_p->at_name);
+		log_buffer[LOG_BUF_SIZE-1] = '\0';
+		log_err(LOG_DEBUG, __func__, log_buffer);
 		return pbs_python_types_table[PP_BOOL_IDX].t_class;
-
-	if (TYPE_ARST(attr_def_p->at_type))     /* check for list of strings */
+	}
+	if (TYPE_ARST(attr_def_p->at_type)){     /* check for list of strings */
+		snprintf(log_buffer, LOG_BUF_SIZE-1,
+		"attr %s value type is TYPE_ARST", attr_def_p->at_name);
+		log_buffer[LOG_BUF_SIZE-1] = '\0';
+		log_err(LOG_DEBUG, __func__, log_buffer);
 		return pbs_python_types_table[PP_ARST_IDX].t_class;
-
-	if (TYPE_INT(attr_def_p->at_type))     /* check for int,long,short */
+	}
+	if (TYPE_INT(attr_def_p->at_type)){     /* check for int,long,short */
+		snprintf(log_buffer, LOG_BUF_SIZE-1,
+		"attr %s value type is TYPE_INT", attr_def_p->at_name);
+		log_buffer[LOG_BUF_SIZE-1] = '\0';
+		log_err(LOG_DEBUG, __func__, log_buffer);
 		return pbs_python_types_table[PP_INT_IDX].t_class;
-
-	if (TYPE_STR(attr_def_p->at_type))     /* check for str type */
+	}
+	if (TYPE_STR(attr_def_p->at_type)){     /* check for str type */
+		snprintf(log_buffer, LOG_BUF_SIZE-1,
+		"attr %s value type is TYPE_STR", attr_def_p->at_name);
+		log_buffer[LOG_BUF_SIZE-1] = '\0';
+		log_err(LOG_DEBUG, __func__, log_buffer);
 		return pbs_python_types_table[PP_STR_IDX].t_class;
-
-	if (TYPE_FLOAT(attr_def_p->at_type))     /* check for float type */
+	}
+	if (TYPE_FLOAT(attr_def_p->at_type)){     /* check for float type */
+		snprintf(log_buffer, LOG_BUF_SIZE-1,
+		"attr %s value type is TYPE_FLOAT", attr_def_p->at_name);
+		log_buffer[LOG_BUF_SIZE-1] = '\0';
+		log_err(LOG_DEBUG, __func__, log_buffer);
 		return pbs_python_types_table[PP_FLOAT_IDX].t_class;
-
-	if (TYPE_ENTITY(attr_def_p->at_type))     /* check for entity type */
+	}
+	if (TYPE_ENTITY(attr_def_p->at_type)){    /* check for entity type */
+		snprintf(log_buffer, LOG_BUF_SIZE-1,
+		"attr %s value type is TYPE_ENTITY", attr_def_p->at_name);
+		log_buffer[LOG_BUF_SIZE-1] = '\0';
+		log_err(LOG_DEBUG, __func__, log_buffer);
 		return pbs_python_types_table[PP_ENTITY_IDX].t_class;
-
+	}
 	/* all else fails return generic */
 
 	return pbs_python_types_table[PP_GENERIC_IDX].t_class;
@@ -916,6 +959,7 @@ pbs_python_setup_server_class_attributes(void)
 	PyObject *py_default_args = NULL;
 	int num_entry =  SRV_ATR_LAST+1; /* 1 for sentinel */
 	int te;
+	attribute *attr_val = NULL;
 
 	if (IS_PBS_PYTHON_CMD(pbs_python_daemon_name))
 		DEBUG3_ARG1("BEGIN setting up all server attributes %s", "");
@@ -1115,6 +1159,7 @@ pbs_python_setup_queue_class_attributes(void)
 			if (!py_default_value) {
 				/* TODO, continuing instead of fatal error */
 				log_err(-1, attr_def_p->at_name, "could not set default value");
+				attr_def_p++;
 				continue;
 			}
 			te = TYPE_ENTITY(attr_def_p->at_type);
@@ -11502,6 +11547,15 @@ pbs_python_set_os_environ(char *env_var, char *env_val)
 			__func__);
 		pbs_python_write_error_to_log(log_buffer);
 		return (-1);
+	}else{
+		snprintf(log_buffer, LOG_BUF_SIZE-1, "%s", "Printing os module");
+		log_event(PBSEVENT_DEBUG2, PBS_EVENTCLASS_HOOK, LOG_INFO,
+			  __func__, log_buffer);
+		PyObject* objectsRepresentation = PyObject_Repr(os_mod_obj);
+		const char* s = PyUnicode_AsUTF8(objectsRepresentation);
+		snprintf(log_buffer, sizeof(log_buffer), s);
+		log_event(PBSEVENT_DEBUG2, PBS_EVENTCLASS_HOOK, LOG_INFO,
+			  __func__, log_buffer);
 	}
 
 	/* if sucess we get a NEW ref */
@@ -11513,10 +11567,20 @@ pbs_python_set_os_environ(char *env_var, char *env_val)
 		pbs_python_write_error_to_log(log_buffer);
 		Py_CLEAR(os_mod_obj);
 		return (-1);
+
+	}else{
+		snprintf(log_buffer, LOG_BUF_SIZE-1, "%s", "Printing environ");
+		log_event(PBSEVENT_DEBUG2, PBS_EVENTCLASS_HOOK, LOG_INFO,
+			  __func__, log_buffer);
+		PyObject* objectsRepresentation = PyObject_Repr(os_mod_env);
+		const char* s = PyUnicode_AsUTF8(objectsRepresentation);
+		snprintf(log_buffer, sizeof(log_buffer), s);
+		log_event(PBSEVENT_DEBUG2, PBS_EVENTCLASS_HOOK, LOG_INFO,
+			  __func__, log_buffer);
 	}
 
 	if ((os_env_dict =
-		PyObject_GetAttrString(os_mod_env, "data")) == NULL) {
+		PyObject_GetAttrString(os_mod_env, "_data")) == NULL) {
 		snprintf(log_buffer, sizeof(log_buffer),
 			"%s:could not retrieve os environment data",
 			__func__);
@@ -11524,6 +11588,16 @@ pbs_python_set_os_environ(char *env_var, char *env_val)
 		Py_CLEAR(os_mod_obj);
 		Py_CLEAR(os_mod_env);
 		return (-1);
+
+	}else{
+		snprintf(log_buffer, LOG_BUF_SIZE-1, "%s", "Printing _data module");
+		log_event(PBSEVENT_DEBUG2, PBS_EVENTCLASS_HOOK, LOG_INFO,
+			  __func__, log_buffer);
+		PyObject* objectsRepresentation = PyObject_Repr(os_env_dict);
+		const char* s = PyUnicode_AsUTF8(objectsRepresentation);
+		snprintf(log_buffer, sizeof(log_buffer), s);
+		log_event(PBSEVENT_DEBUG2, PBS_EVENTCLASS_HOOK, LOG_INFO,
+			  __func__, log_buffer);
 	}
 
 	if (env_val == NULL) {

@@ -243,6 +243,10 @@ pbs_python_write_error_to_log(const char *emsg)
 	}
 
 	PyErr_Fetch(&exc_type, &exc_value, &exc_traceback);
+	PyErr_NormalizeException(&exc_type, &exc_value, &exc_traceback);
+	if(exc_traceback != NULL){
+		PyException_SetTraceback(exc_value, exc_traceback);
+	}
 	PyErr_Clear(); /* just in case, not clear from API doc */
 
 	exc_string = NULL;
@@ -274,9 +278,10 @@ pbs_python_write_error_to_log(const char *emsg)
 	if (log_buffer[0] != '\0')
 		log_err(PBSE_INTERNAL, emsg, log_buffer);
 
-	module_name = PyUnicode_FromString("traceback");
-	pyth_module = PyImport_Import(module_name);
-	Py_DECREF(module_name);
+	//module_name = PyUnicode_FromString("traceback");
+	//pyth_module = PyImport_Import(module_name);
+	pyth_module = PyImport_ImportModule("traceback");
+	Py_XDECREF(module_name);
 
 	if (pyth_module == NULL){
 		full_backtrace = NULL;
@@ -291,13 +296,14 @@ pbs_python_write_error_to_log(const char *emsg)
 		pyth_val = PyObject_CallFunctionObjArgs(pyth_func, exc_type, exc_value, exc_traceback);
 		pystr = PyObject_Str(pyth_val);
 		str = PyUnicode_AsUTF8(pystr);
-		full_backtrace = strdup(str);
+		//full_backtrace = strdup(str);
 		snprintf(log_buffer, LOG_BUF_SIZE-1, "%s", "Printing full backtrace");
 		log_err(PBSE_INTERNAL, emsg, log_buffer);
-		snprintf(log_buffer, LOG_BUF_SIZE-1, "%s", full_backtrace);
+		snprintf(log_buffer, LOG_BUF_SIZE-1, "%s", str);
 		log_err(PBSE_INTERNAL, emsg, log_buffer);
 		Py_XDECREF(pyth_val);
 	}
+	PyErr_Clear(); /* just in case, not clear from API doc */
 
 ERROR_EXIT:
 	Py_XDECREF(exc_type);

@@ -819,8 +819,6 @@ class pbs_str(str):
     _derived_types = (str,)
 
     def __init__(self, value):
-        with open("/tmp/pbs_python.log", 'a') as f:
-            f.write(str(pbs_str.__mro__)+"\n")
         _pbs_v1.validate_input("job", "Job_Owner", value)
         super().__init__()
 

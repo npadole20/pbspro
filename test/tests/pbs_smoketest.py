@@ -550,16 +550,22 @@ class SmokeTest(PBSTestSuite):
         self.server.manager(MGR_CMD_SET, NODE, a, id=self.mom.shortname)
         j = Job(TEST_USER, attrs={ATTR_N: 'test'})
         j.create_script('sleep 120\n', hostname=self.server.client)
+        t1 = time.time()
         jid = self.server.submit(j)
         jobs = self.server.status(JOB, id=jid)
         self.logger.info("job stat is %s" % jobs)
         lines = self.server.log_lines(logtype=self.server, n=100)
-        self.logger.info("100 server log lines %s before expect" % lines)
+        self.logger.info("server log lines before except \n %s\n" % lines)
         try:
             self.server.expect(JOB, {'job_state': 'R'}, id=jid)
         except PtlExpectError as exc:
-            lines = self.server.log_lines(logtype=self.server, n=100)
-            self.logger.info("100 server log lines in except \n %s\n" % lines)
+            t2 = time.time()
+            lines = self.server.log_lines(logtype=self.server,
+                                          starttime=t1, endtime=t2)
+            self.logger.info("server log lines in except \n %s\n" % lines)
+            lines = self.server.log_lines(logtype=self.mom,
+                                          starttime=t1, endtime=t2)
+            self.logger.info("mom log lines in except \n %s\n" % lines)
         self.logger.info("Testing script with extension")
         j = Job(TEST_USER)
         fn = self.du.create_temp_file(suffix=".scr", body="/bin/sleep 10",

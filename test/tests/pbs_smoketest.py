@@ -557,9 +557,9 @@ class SmokeTest(PBSTestSuite):
         self.logger.info("100 server log lines %s before expect" % lines)
         try:
             self.server.expect(JOB, {'job_state': 'R'}, id=jid)
-        except Exception as e:
+        except PtlExpectError as exc:
             lines = self.server.log_lines(logtype=self.server, n=100)
-            self.logger.info("100 server log lines %s in except" % lines)
+            self.logger.info("100 server log lines in except \n %s\n" % lines)
         self.logger.info("Testing script with extension")
         j = Job(TEST_USER)
         fn = self.du.create_temp_file(suffix=".scr", body="/bin/sleep 10",

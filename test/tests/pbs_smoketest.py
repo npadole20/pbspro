@@ -581,6 +581,8 @@ class SmokeTest(PBSTestSuite):
                 self.logger.info("job_err=%s" % (job_err,))
         else:
             self.logger.info("No error file")
+        rc = self.du.run_cmd(cmd=['env'])
+        self.logger.info("env is %s", rc['out'])
         self.logger.info("Testing script with extension")
         j = Job(TEST_USER)
         fn = self.du.create_temp_file(suffix=".scr", body="/bin/sleep 10",

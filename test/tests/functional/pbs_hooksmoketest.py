@@ -472,6 +472,8 @@ pbs.logmsg(pbs.LOG_DEBUG, "Printing os.environ %s" % os.environ)
         jid = self.server.submit(j)
         self.server.expect(JOB, {'job_state': 'R'}, id=jid)
         self.server.log_match("Printing os.environ", self.server.shortname)
+        rc = self.du.run_cmd(cmd=['env'])
+        self.logger.info("env is %s", rc['out'])
 
     def tearDown(self):
         self.server.manager(MGR_CMD_SET, SERVER,

@@ -549,7 +549,8 @@ class SmokeTest(PBSTestSuite):
         a = {ATTR_rescavail + '.ncpus': '2'}
         self.server.manager(MGR_CMD_SET, NODE, a, id=self.mom.shortname)
         j = Job(TEST_USER, attrs={ATTR_N: 'test'})
-        j.create_script('sleep 120\n', hostname=self.server.client)
+        j.create_script('#!/bin/sh -x\nsleep 120\n',
+                        hostname=self.server.client)
         t1 = time.time()
         jid = self.server.submit(j)
         jobs = self.server.status(JOB, id=jid)
@@ -566,6 +567,20 @@ class SmokeTest(PBSTestSuite):
             lines = self.server.log_lines(logtype=self.mom,
                                           starttime=t1, endtime=t2)
             self.logger.info("mom log lines in except \n %s\n" % lines)
+        job_output_file = jobs[0]['Output_Path'].split(':')[1]
+        if os.path.exists(job_output_file):
+            with open(job_output_file, 'r') as fd:
+                job_out = fd.read()
+                self.logger.info("job_out=%s" % (job_out,))
+        else:
+            self.logger.info("No output file")
+        job_error_file = jobs[0]['Error_Path'].split(':')[1]
+        if os.path.exists(job_error_file):
+            with open(job_error_file, 'r') as fd:
+                job_err = fd.read()
+                self.logger.info("job_err=%s" % (job_err,))
+        else:
+            self.logger.info("No error file")
         self.logger.info("Testing script with extension")
         j = Job(TEST_USER)
         fn = self.du.create_temp_file(suffix=".scr", body="/bin/sleep 10",

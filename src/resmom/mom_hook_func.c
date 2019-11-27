@@ -868,6 +868,7 @@ run_hook(hook *phook, unsigned int event_type, mom_hook_input_t *hook_input,
 				run_exit = WEXITSTATUS(waitst);
 			} else if (WIFSIGNALED(waitst)) {
 				run_exit = -4;
+				log_eventf(PBSEVENT_ERROR, PBS_EVENTCLASS_HOOK, LOG_INFO, __func__, "signal caught is = %d", WTERMSIG(waitst));
 			}
 		} else {
 			snprintf(log_buffer, sizeof(log_buffer),

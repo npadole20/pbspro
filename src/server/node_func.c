@@ -2263,8 +2263,28 @@ set_node_topology(attribute *new, void *pobj, int op)
 				return (PBSE_INTERNAL);
 			}
 
+			FILE *fdtopo = NULL;
+			char *xmlbuf;
+			log_event(PBSEVENT_DEBUG4, PBS_EVENTCLASS_NODE, LOG_DEBUG, __func__, "READING FILE NOW");
+			fdtopo = fopen("/tmp/neha20","r");
+			fseek(fdtopo, 0, SEEK_END);
+			long fsize = ftell(fdtopo);
+			fseek(fdtopo, 0, SEEK_SET);
+			xmlbuf = (char *)malloc(fsize + 1);
+			fread(xmlbuf, sizeof(char), fsize, fdtopo);
+			//int	lbuflen1 = strlen(xmlbuf) + 1024;
+			//lbuf1 = (char *)malloc(lbuflen1);
+			fclose(fdtopo);
+			log_event(PBSEVENT_DEBUG4, PBS_EVENTCLASS_NODE, LOG_DEBUG, __func__, "READ FILE DONE");
+			//sprintf(lbuf1, "NEHA xmlbuf '%s' added", xmlbuf);
+			//log_event(PBSEVENT_DEBUG4, PBS_EVENTCLASS_NODE, LOG_DEBUG, __func__, lbuf1);
+			valstr = xmlbuf;
+			log_event(PBSEVENT_DEBUG3, PBS_EVENTCLASS_SERVER,
+				LOG_DEBUG, __func__, "NEHA: Replaced valstr content");
 			record_node_topology(pnode->nd_name, valstr);
 			process_topology_info(pnode, valstr, ntt);
+			log_event(PBSEVENT_DEBUG3, PBS_EVENTCLASS_SERVER,
+				LOG_DEBUG, __func__, "NEHA: After process topology info node topology");
 
 			break;
 

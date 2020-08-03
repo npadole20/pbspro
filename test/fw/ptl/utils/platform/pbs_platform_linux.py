@@ -321,3 +321,7 @@ class PBSPlatform(object):
 
     def get_pbs_mom_option(self):
         return None
+
+    def get_path_separator(self):
+        return '/'
+

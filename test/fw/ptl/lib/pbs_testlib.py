@@ -3489,7 +3489,7 @@ class PBSService(PBSObject):
         self.launcher = None
         self.dyn_created_files = []
         self.saved_config = {}
-
+        self.class_separator = self.ps.get_path_separator(platform=self.platform)
         PBSObject.__init__(self, name, attrs, defaults)
 
         if not self.has_snap:
@@ -3533,7 +3533,7 @@ class PBSService(PBSObject):
             if self.pbs_conf is None or len(self.pbs_conf) == 0:
                 self.pbs_conf = {'PBS_HOME': "", 'PBS_EXEC': ""}
             else:
-                ef = os.path.join(self.pbs_conf['PBS_HOME'], 'pbs_environment')
+                ef = self.class_separator.join([self.pbs_conf['PBS_HOME'], 'pbs_environment'])
                 self.pbs_env = self.du.parse_pbs_environment(self.hostname, ef)
                 self.pbs_server_name = self.du.get_pbs_server_name(
                     self.pbs_conf)
@@ -3542,22 +3542,22 @@ class PBSService(PBSObject):
 
     def _load_from_snap(self, snap):
         snapmap = {}
-        snapmap[SERVER] = os.path.join(snap, 'server', 'qstat_Bf.out')
-        snapmap[VNODE] = os.path.join(snap, 'node', 'pbsnodes_va.out')
-        snapmap[QUEUE] = os.path.join(snap, 'server', 'qstat_Qf.out')
-        snapmap[JOB] = os.path.join(snap, 'job', 'qstat_tf.out')
+        snapmap[SERVER] = self.class_separator.join([snap, 'server', 'qstat_Bf.out'])
+        snapmap[VNODE] = self.class_separator.join([snap, 'node', 'pbsnodes_va.out'])
+        snapmap[QUEUE] = self.class_separator.join([snap, 'server', 'qstat_Qf.out'])
+        snapmap[JOB] = self.class_separator.join([snap, 'job', 'qstat_tf.out'])
         if not os.path.isfile(snapmap[JOB]):
-            snapmap[JOB] = os.path.join(snap, 'job', 'qstat_f.out')
-        snapmap[RESV] = os.path.join(snap, 'reservation', 'pbs_rstat_f.out')
-        snapmap[SCHED] = os.path.join(snap, 'scheduler', 'qmgr_psched.out')
+            snapmap[JOB] = self.class_separator.join([snap, 'job', 'qstat_f.out'])
+        snapmap[RESV] = self.class_separator.join([snap, 'reservation', 'pbs_rstat_f.out'])
+        snapmap[SCHED] = self.class_separator.join([snap, 'scheduler', 'qmgr_psched.out'])
         snapmap[HOOK] = []
-        if (os.path.isdir(os.path.join(snap, 'server_priv')) and
-                os.path.isdir(os.path.join(snap, 'server_priv', 'hooks'))):
-            _ld = os.listdir(os.path.join(snap, 'server_priv', 'hooks'))
+        if (os.path.isdir(self.class_separator.join([snap, 'server_priv'])) and
+                os.path.isdir(self.class_separator.join([snap, 'server_priv', 'hooks']))):
+            _ld = os.listdir(self.class_separator.join([snap, 'server_priv', 'hooks']))
             for f in _ld:
                 if f.endswith('.HK'):
                     snapmap[HOOK].append(
-                        os.path.join(snap, 'server_priv', 'hooks', f))
+                        self.class_separator.join([snap, 'server_priv', 'hooks', f]))
 
         return snapmap
 
@@ -3574,9 +3574,10 @@ class PBSService(PBSObject):
 
         if conf is not None and 'PBS_HOME' in conf:
             tm = time.strftime("%Y%m%d", time.localtime())
-            self.logfile = os.path.join(conf['PBS_HOME'], elmt, tm)
-            self.acctlogfile = os.path.join(conf['PBS_HOME'], 'server_priv',
-                                            'accounting', tm)
+            self.logfile = self.class_separator.join([conf['PBS_HOME'], elmt, tm])
+            if "server" in elmt:
+                self.acctlogfile = self.class_separator.join([conf['PBS_HOME'], 'server_priv',
+                                            'accounting', tm])
 
     def _instance_to_logpath(self, inst):
         """
@@ -3734,9 +3735,9 @@ class PBSService(PBSObject):
         priv = self._instance_to_privpath(inst)
         lock = self._instance_to_lock(inst)
         if isinstance(inst, Scheduler) and 'sched_priv' in inst.attributes:
-            path = os.path.join(inst.attributes['sched_priv'], lock)
+            path = self.class_separator.join([inst.attributes['sched_priv'], lock])
         else:
-            path = os.path.join(self.pbs_conf['PBS_HOME'], priv, lock)
+            path = self.class_separator.join([self.pbs_conf['PBS_HOME'], priv, lock])
         rv = self.du.cat(self.hostname, path, sudo=True, logerr=False)
         if ((rv['rc'] == 0) and (len(rv['out']) > 0)):
             pid = rv['out'][0].strip()
@@ -3804,8 +3805,8 @@ class PBSService(PBSObject):
                 # script
                 pexec = inst.pbs_conf['PBS_EXEC']
                 ldlib = ['LD_LIBRARY_PATH=' +
-                         os.path.join(pexec, 'lib') + ':' +
-                         os.path.join(pexec, 'pgsql', 'lib')]
+                         self.class_separator.join([pexec, 'lib']) + ':' +
+                         self.class_separator.join([pexec, 'pgsql', 'lib'])]
                 app = 'pbs_server.bin'
             else:
                 ldlib = []
@@ -3815,7 +3816,7 @@ class PBSService(PBSObject):
         else:
             cmd = []
 
-        cmd += [os.path.join(self.pbs_conf['PBS_EXEC'], 'sbin', app)]
+        cmd += [self.class_separator.join([self.pbs_conf['PBS_EXEC'], 'sbin', app])]
         if args is not None:
             cmd += args
         if not self.default_pbs_conf:
@@ -3908,10 +3909,10 @@ class PBSService(PBSObject):
             if logtype == 'tracejob':
                 if id is None:
                     return None
-                cmd = [os.path.join(
+                cmd = [self.class_separator.join([
                        self.pbs_conf['PBS_EXEC'],
                        'bin',
-                       'tracejob')]
+                       'tracejob'])]
                 cmd += [str(id)]
                 lines = self.du.run_cmd(self.hostname, cmd)['out']
                 if n != 'ALL':
@@ -3922,8 +3923,8 @@ class PBSService(PBSObject):
                 firstday_obj = datetime.datetime.strptime(daystart, '%Y%m%d')
                 lastday_obj = datetime.datetime.strptime(dayend, '%Y%m%d')
                 if logtype == 'accounting':
-                    logdir = os.path.join(self.pbs_conf['PBS_HOME'],
-                                          'server_priv', 'accounting')
+                    logdir = self.class_separator.join([self.pbs_conf['PBS_HOME'],
+                                          'server_priv', 'accounting'])
                     sudo = True
                 elif (isinstance(self, Scheduler) and
                         'sched_log' in self.attributes):
@@ -3935,10 +3936,10 @@ class PBSService(PBSObject):
                     if logval is None:
                         m = 'Invalid logtype'
                         raise PtlLogMatchError(rv=False, rc=-1, msg=m)
-                    logdir = os.path.join(self.pbs_conf['PBS_HOME'], logval)
+                    logdir = self.class_separator.join([self.pbs_conf['PBS_HOME'], logval])
                 while firstday_obj <= lastday_obj:
                     day = firstday_obj.strftime("%Y%m%d")
-                    filename = os.path.join(logdir, day)
+                    filename = self.class_separator.join([logdir, day])
                     if n == 'ALL':
                         day_lines = self.du.cat(
                             self.hostname, filename, sudo=sudo,
@@ -4256,8 +4257,8 @@ class PBSService(PBSObject):
                     return False
             conf = sconf[str(objtype)]
             if objtype == MGR_OBJ_SERVER:
-                qmgr = os.path.join(self.client_conf['PBS_EXEC'],
-                                    'bin', 'qmgr')
+                qmgr = self.class_separator.join([self.client_conf['PBS_EXEC'],
+                                    'bin', 'qmgr'])
                 for k, v in conf.items():
                     # Load server configuration
                     if k.startswith('qmgr_'):
@@ -4373,8 +4374,8 @@ class PBSService(PBSObject):
         """
         Create node in PBS with given attributes
         """
-        qmgr = os.path.join(self.client_conf['PBS_EXEC'],
-                            'bin', 'qmgr')
+        qmgr = self.class_separator.join([self.client_conf['PBS_EXEC'],
+                            'bin', 'qmgr'])
         execcmd = "create node " + node_name
         execcmd += " Port=" + attrs['Port']
         cmd = [qmgr, "-c", execcmd]
@@ -4881,9 +4882,10 @@ class Server(PBSService):
                                   'API submission is not available')
                 return PTL_CLI
         elif mode == PTL_CLI:
+            #LOOK AT THIS ONE
             if ((not self.has_snap) and
-                not os.path.isdir(os.path.join(self.client_conf['PBS_EXEC'],
-                                               'bin'))):
+                not os.path.isdir(self.class_separator.join([self.client_conf['PBS_EXEC'],
+                                               'bin']))):
                 self.logger.error(self.logprefix +
                                   'PBS commands are not available')
                 return None
@@ -5144,20 +5146,21 @@ class Server(PBSService):
         self.logger.info(self.logprefix +
                          'reverting configuration to defaults')
         self.cleanup_jobs_and_reservations()
-        self.atom_hk = os.path.join(self.pbs_conf['PBS_HOME'],
+        #LOOK AT THIS
+        self.atom_hk = self.class_separator.join([self.pbs_conf['PBS_HOME'],
                                     'server_priv', 'hooks',
-                                    'PBS_cray_atom.HK')
-        self.dflt_atom_hk = os.path.join(self.pbs_conf['PBS_EXEC'],
+                                    'PBS_cray_atom.HK'])
+        self.dflt_atom_hk = self.class_separator.join([self.pbs_conf['PBS_EXEC'],
                                          'lib', 'python', 'altair',
                                          'pbs_hooks',
-                                         'PBS_cray_atom.HK')
-        self.atom_cf = os.path.join(self.pbs_conf['PBS_HOME'],
+                                         'PBS_cray_atom.HK'])
+        self.atom_cf = self.class_separator.join([self.pbs_conf['PBS_HOME'],
                                     'server_priv', 'hooks',
-                                    'PBS_cray_atom.CF')
-        self.dflt_atom_cf = os.path.join(self.pbs_conf['PBS_EXEC'],
+                                    'PBS_cray_atom.CF'])
+        self.dflt_atom_cf = self.class_separator.join([self.pbs_conf['PBS_EXEC'],
                                          'lib', 'python', 'altair',
                                          'pbs_hooks',
-                                         'PBS_cray_atom.CF')
+                                         'PBS_cray_atom.CF'])
         self.unset_svr_attrib()
         for k in self.dflt_attributes.keys():
             if(k not in self.attributes or
@@ -5363,9 +5366,9 @@ class Server(PBSService):
         else:
             self.logger.error('Failed to save site hooks')
             return False
-        qmgr = os.path.join(self.client_conf['PBS_EXEC'], 'bin', 'qmgr')
-        pbsnodes = os.path.join(
-            self.client_conf['PBS_EXEC'], 'bin', 'pbsnodes')
+        qmgr = self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin', 'qmgr'])
+        pbsnodes = self.class_separator.join([
+            self.client_conf['PBS_EXEC'], 'bin', 'pbsnodes'])
         ret = self.du.run_cmd(
             self.hostname, [
                 qmgr, '-c', 'print server'], sudo=True,
@@ -5414,7 +5417,7 @@ class Server(PBSService):
         """
         save all the hooks .CF, .PY, .HK files
         """
-        qmgr = os.path.join(self.client_conf['PBS_EXEC'], 'bin', 'qmgr')
+        qmgr = self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin', 'qmgr'])
         cfg = {"hooks": ""}
         cmd = [qmgr, '-c', 'print hook @default']
         ret = self.du.run_cmd(self.hostname, cmd,
@@ -5739,10 +5742,11 @@ class Server(PBSService):
         elif self.get_op_mode() == PTL_CLI:
             tgt = self.client
             if obj_type in (JOB, QUEUE, SERVER):
-                pcmd = [os.path.join(
+                #LOOK AT THIS
+                pcmd = [self.class_separator.join([
                         self.client_conf['PBS_EXEC'],
                         'bin',
-                        'qstat')]
+                        'qstat'])]
 
                 if extend:
                     pcmd += ['-' + extend]
@@ -5766,8 +5770,9 @@ class Server(PBSService):
                     pcmd += ['-Bf', self.hostname]
 
             elif obj_type in (NODE, VNODE, HOST):
-                pcmd = [os.path.join(self.client_conf['PBS_EXEC'], 'bin',
-                                     'pbsnodes')]
+                #LOOK AT THIS
+                pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin',
+                                     'pbsnodes'])]
                 pcmd += ['-s', self.hostname]
                 if obj_type in (NODE, VNODE):
                     pcmd += ['-v']
@@ -5778,8 +5783,9 @@ class Server(PBSService):
                 else:
                     pcmd += ['-a']
             elif obj_type == RESV:
-                pcmd = [os.path.join(self.client_conf['PBS_EXEC'], 'bin',
-                                     'pbs_rstat')]
+                #LOOK AT THIS
+                pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin',
+                                     'pbs_rstat'])]
                 pcmd += ['-f']
                 if id:
                     pcmd += [id]
@@ -6103,11 +6109,11 @@ class Server(PBSService):
         if self.get_op_mode() == PTL_CLI:
             exclude_attrs = []  # list of attributes to not convert to CLI
             if isinstance(obj, Job):
-                runcmd += [os.path.join(self.client_conf['PBS_EXEC'], 'bin',
-                                        'qsub')]
+                runcmd += [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin',
+                                        'qsub'])]
             elif isinstance(obj, Reservation):
-                runcmd += [os.path.join(self.client_conf['PBS_EXEC'], 'bin',
-                                        'pbs_rsub')]
+                runcmd += [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin',
+                                        'pbs_rsub'])]
                 if ATTR_resv_start in obj.custom_attrs:
                     start = obj.custom_attrs[ATTR_resv_start]
                     obj.custom_attrs[ATTR_resv_start] = \
@@ -6257,7 +6263,8 @@ class Server(PBSService):
                         fn = self.utils.random_str(
                             length=4, prefix='PtlPbsJob')
                         tmp = self.du.get_tempdir(self.hostname)
-                        fn = os.path.join(tmp, fn)
+                        #LOOK AT THIS
+                        fn = self.class_separator.join([tmp, fn])
                     if ATTR_o not in obj.attributes:
                         obj.attributes[ATTR_o] = (self.hostname + ':' +
                                                   fn + '.o')
@@ -6351,7 +6358,7 @@ class Server(PBSService):
         c = None
         rc = 0
         if self.get_op_mode() == PTL_CLI:
-            pcmd = [os.path.join(self.client_conf['PBS_EXEC'], 'bin', 'qdel')]
+            pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin', 'qdel'])]
             if extend is not None:
                 pcmd += self.utils.convert_to_cli(extend, op=IFL_DELETE,
                                                   hostname=self.hostname)
@@ -6446,8 +6453,8 @@ class Server(PBSService):
         c = None
         rc = 0
         if self.get_op_mode() == PTL_CLI:
-            pcmd = [os.path.join(self.client_conf['PBS_EXEC'], 'bin',
-                                 'pbs_rdel')]
+            pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin',
+                                 'pbs_rdel'])]
             if not self.default_client_pbs_conf:
                 # Add this to set_env function in PlatformSwitch
                 pcmd = ['PBS_CONF_FILE=' + self.client_pbs_conf_file] + pcmd
@@ -6597,8 +6604,8 @@ class Server(PBSService):
 
         c = None
         if self.get_op_mode() == PTL_CLI:
-            pcmd = [os.path.join(self.client_conf['PBS_EXEC'],
-                                 'bin', 'qselect')]
+            pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'],
+                                 'bin', 'qselect'])]
 
             cmd = self.utils.convert_to_cli(attrib, op=IFL_SELECT,
                                             hostname=self.hostname)
@@ -6827,7 +6834,7 @@ class Server(PBSService):
                 else:
                     sudo = False
 
-            pcmd = [os.path.join(self.pbs_conf['PBS_EXEC'], 'bin', 'qmgr'),
+            pcmd = [self.class_separator.join([self.pbs_conf['PBS_EXEC'], 'bin', 'qmgr']),
                     '-c', execcmd]
 
             if as_script:
@@ -6994,7 +7001,7 @@ class Server(PBSService):
 
         c = None
         if self.get_op_mode() == PTL_CLI:
-            pcmd = [os.path.join(self.client_conf['PBS_EXEC'], 'bin', 'qsig')]
+            pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin', 'qsig'])]
             if signal is not None:
                 pcmd += ['-s']
                 if signal != PTL_NOARG:
@@ -7079,7 +7086,7 @@ class Server(PBSService):
 
         c = None
         if self.get_op_mode() == PTL_CLI:
-            pcmd = [os.path.join(self.client_conf['PBS_EXEC'], 'bin', 'qmsg')]
+            pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin', 'qmsg'])]
             if to_file is not None:
                 if MSG_ERR == to_file:
                     pcmd += ['-E']
@@ -7162,8 +7169,8 @@ class Server(PBSService):
 
         c = None
         if self.get_op_mode() == PTL_CLI:
-            pcmd = [os.path.join(self.client_conf['PBS_EXEC'], 'bin',
-                                 'qalter')]
+            pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin',
+                                 'qalter'])]
             if attrib is not None:
                 _conf = self.default_client_pbs_conf
                 pcmd += self.utils.convert_to_cli(attrib, op=IFL_ALTER,
@@ -7235,7 +7242,7 @@ class Server(PBSService):
 
         c = None
         if self.get_op_mode() == PTL_CLI:
-            pcmd = [os.path.join(self.client_conf['PBS_EXEC'], 'bin', 'qhold')]
+            pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin', 'qhold'])]
             if holdtype is not None:
                 pcmd += ['-h']
                 if holdtype != PTL_NOARG:
@@ -7305,7 +7312,7 @@ class Server(PBSService):
 
         c = None
         if self.get_op_mode() == PTL_CLI:
-            pcmd = [os.path.join(self.client_conf['PBS_EXEC'], 'bin', 'qrls')]
+            pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin', 'qrls'])]
             if holdtype is not None:
                 pcmd += ['-h']
                 if holdtype != PTL_NOARG:
@@ -7371,8 +7378,8 @@ class Server(PBSService):
 
         c = None
         if self.get_op_mode() == PTL_CLI:
-            pcmd = [os.path.join(self.client_conf['PBS_EXEC'], 'bin',
-                                 'qrerun')]
+            pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin',
+                                 'qrerun'])]
             if extend:
                 pcmd += ['-W', extend]
             if jobid is not None:
@@ -7438,8 +7445,8 @@ class Server(PBSService):
 
         c = None
         if self.get_op_mode() == PTL_CLI:
-            pcmd = [os.path.join(self.client_conf['PBS_EXEC'], 'bin',
-                                 'qorder')]
+            pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin',
+                                 'qorder'])]
             if jobid1 is not None:
                 pcmd += [jobid1]
             if jobid2 is not None:
@@ -7513,7 +7520,7 @@ class Server(PBSService):
 
         c = None
         if self.get_op_mode() == PTL_CLI:
-            pcmd = [os.path.join(self.client_conf['PBS_EXEC'], 'bin', 'qrun')]
+            pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin', 'qrun'])]
             if run_async:
                 pcmd += ['-a']
             if location is not None:
@@ -7592,7 +7599,7 @@ class Server(PBSService):
         rc = 0
 
         if self.get_op_mode() == PTL_CLI:
-            pcmd = [os.path.join(self.client_conf['PBS_EXEC'], 'bin', 'qmove')]
+            pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin', 'qmove'])]
             if destination is not None:
                 pcmd += [destination]
             if jobid is not None:
@@ -7687,7 +7694,7 @@ class Server(PBSService):
         rc = 0
 
         if self.get_op_mode() == PTL_CLI:
-            pcmd = [os.path.join(self.client_conf['PBS_EXEC'], 'bin', 'qterm')]
+            pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin', 'qterm'])]
             _conf = self.default_client_pbs_conf
             pcmd += self.utils.convert_to_cli(manner, op=IFL_TERMINATE,
                                               hostname=self.hostname,
@@ -7767,8 +7774,8 @@ class Server(PBSService):
         self.logger.info(prefix)
 
         if self.get_op_mode() == PTL_CLI:
-            pcmd = [os.path.join(self.client_conf['PBS_EXEC'], 'bin',
-                                 'qdisable')]
+            pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin',
+                                 'qdisable'])]
             if queue is not None:
                 pcmd += queue
             if not self.default_client_pbs_conf:
@@ -7815,8 +7822,8 @@ class Server(PBSService):
         self.logger.info(prefix)
 
         if self.get_op_mode() == PTL_CLI:
-            pcmd = [os.path.join(self.client_conf['PBS_EXEC'], 'bin',
-                                 'qenable')]
+            pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin',
+                                 'qenable'])]
             if queue is not None:
                 pcmd += queue
             if not self.default_client_pbs_conf:
@@ -7863,8 +7870,8 @@ class Server(PBSService):
         self.logger.info(prefix)
 
         if self.get_op_mode() == PTL_CLI:
-            pcmd = [os.path.join(self.client_conf['PBS_EXEC'], 'bin',
-                                 'qstart')]
+            pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin',
+                                 'qstart'])]
             if queue is not None:
                 pcmd += queue
             if not self.default_client_pbs_conf:
@@ -7910,8 +7917,8 @@ class Server(PBSService):
         self.logger.info(prefix)
 
         if self.get_op_mode() == PTL_CLI:
-            pcmd = [os.path.join(self.client_conf['PBS_EXEC'], 'bin',
-                                 'qstop')]
+            pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin',
+                                 'qstop'])]
             if queue is not None:
                 pcmd += queue
             if not self.default_client_pbs_conf:
@@ -8051,8 +8058,8 @@ class Server(PBSService):
                     f.write(' flag=' + r.attributes['flag'])
                 f.write('\n')
         if filename is None:
-            dest = os.path.join(self.pbs_conf['PBS_HOME'], 'server_priv',
-                                'resourcedef')
+            dest = self.class_separator.join([self.pbs_conf['PBS_HOME'], 'server_priv',
+                                'resourcedef'])
         else:
             dest = filename
         self.du.run_copy(self.hostname, src=fn, dest=dest, sudo=True,
@@ -8073,8 +8080,8 @@ class Server(PBSService):
         :raises: PbsResourceError
         """
         if file is None:
-            file = os.path.join(self.pbs_conf['PBS_HOME'], 'server_priv',
-                                'resourcedef')
+            file = self.class_separator.join([self.pbs_conf['PBS_HOME'], 'server_priv',
+                                'resourcedef'])
         ret = self.du.cat(self.hostname, file, logerr=False, sudo=True)
         if ret['rc'] != 0 or len(ret['out']) == 0:
             # Most probable error is that file does not exist, we'll let it
@@ -8178,11 +8185,11 @@ class Server(PBSService):
             ret = self.du.run_cmd(self.hostname, ['python3', '-c', p_env],
                                   logerr=False)
             if ret['out']:
-                runcmd = [os.path.join(ret['out'][0], 'pbs_as')]
+                runcmd = [self.class_separator.join([ret['out'][0], 'pbs_as'])]
             else:
                 runcmd = ['pbs_as']
         elif 'PTL_EXEC' in os.environ:
-            runcmd = [os.path.join(os.environ['PTL_EXEC'], 'pbs_as')]
+            runcmd = [self.class_separator.join([os.environ['PTL_EXEC'], 'pbs_as'])]
         else:
             runcmd = ['pbs_as']
 
@@ -8271,8 +8278,8 @@ class Server(PBSService):
         c = None
         resvid = resvid.split()
         if self.get_op_mode() == PTL_CLI:
-            pcmd = [os.path.join(self.client_conf['PBS_EXEC'], 'bin',
-                                 'pbs_ralter')]
+            pcmd = [self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin',
+                                 'pbs_ralter'])]
             if attrib is not None:
                 _conf = self.default_client_pbs_conf
                 pcmd += self.utils.convert_to_cli(attrib, op=IFL_RALTER,
@@ -9732,6 +9739,7 @@ class Server(PBSService):
             _np_conf['PBS_START_SCHED'] = '0'
             _np_conf['PBS_START_MOM'] = '1'
             for i in range(0, num * step_port, step_port):
+                #LOOK AT THIS
                 _np = os.path.join(_hp, home_prefix + str(i))
                 _n_pbsconf = os.path.join('/etc', conf_prefix + str(i))
                 _np_conf['PBS_HOME'] = _np
@@ -9834,7 +9842,7 @@ class Server(PBSService):
 
         if not self._is_local:
             tmpdir = self.du.get_tempdir(self.hostname)
-            rfile = os.path.join(tmpdir, os.path.basename(fn))
+            rfile = self.class_separator.join([tmpdir, os.path.basename(fn)])
             self.du.run_copy(self.hostname, src=fn, dest=rfile)
         else:
             rfile = fn
@@ -9909,13 +9917,13 @@ class Server(PBSService):
         for hook in events:
             hook_py = name + '.PY'
             hook_hk = name + '.HK'
-            pyfile = os.path.join(self.pbs_conf['PBS_HOME'],
-                                  "server_priv", "hooks", hook_py)
-            hfile = os.path.join(self.pbs_conf['PBS_HOME'],
-                                 "server_priv", "hooks", hook_hk)
+            pyfile = self.class_separator.join([self.pbs_conf['PBS_HOME'],
+                                  "server_priv", "hooks", hook_py])
+            hfile = self.class_separator.join([self.pbs_conf['PBS_HOME'],
+                                 "server_priv", "hooks", hook_hk])
             logmsg = hook_py + ";copy hook-related file request received"
-            cmd = os.path.join(self.client_conf['PBS_EXEC'], 'bin',
-                               'pbsnodes') + ' -a' + ' -Fjson'
+            cmd = self.class_separator.join([self.client_conf['PBS_EXEC'], 'bin',
+                               'pbsnodes']) + ' -a' + ' -Fjson'
             cmd_out = self.du.run_cmd(self.hostname, cmd, sudo=True)
             if cmd_out['rc'] != 0:
                 return False
@@ -9958,7 +9966,7 @@ class Server(PBSService):
 
         if not self._is_local:
             tmpdir = self.du.get_tempdir(self.hostname)
-            rfile = os.path.join(tmpdir, os.path.basename(fn))
+            rfile = self.class_separator.join([tmpdir, os.path.basename(fn)])
             rc = self.du.run_copy(self.hostname, src=fn, dest=rfile)
             if rc != 0:
                 raise AssertionError("Failed to copy file %s"
@@ -9999,7 +10007,7 @@ class Server(PBSService):
         cmd = ["export", hook_t, hook_name]
         cmd += ["application/x-config", "default"]
         cmd = " ".join(cmd)
-        pcmd = [os.path.join(self.pbs_conf['PBS_EXEC'], 'bin', 'qmgr'),
+        pcmd = [self.class_separator.join([self.pbs_conf['PBS_EXEC'], 'bin', 'qmgr']),
                 '-c', cmd]
         ret = self.du.run_cmd(self.hostname, pcmd, sudo=True)
         if ret['rc'] == 0:
@@ -10598,7 +10606,7 @@ class Server(PBSService):
             groups = set()
             users = {}
             for name in os.listdir(acct_logs):
-                fpath = os.path.join(acct_logs, name)
+                fpath = self.class_separator.join([acct_logs, name])
                 with open(fpath, "r") as fd:
                     for line in fd:
                         rec_list = line.split(";", 3)
@@ -10641,22 +10649,22 @@ class Server(PBSService):
             svr.revert_to_defaults(delqueues=True, delhooks=True)
             local = svr.pbs_conf['PBS_HOME']
 
-            snap_rdef = os.path.join(self.snap, 'server_priv', 'resourcedef')
-            snap_sc = os.path.join(self.snap, 'sched_priv', 'sched_config')
-            snap_rg = os.path.join(self.snap, 'sched_priv', 'resource_group')
-            snap_hldy = os.path.join(self.snap, 'sched_priv', 'holidays')
-            nodes = os.path.join(self.snap, 'node', 'pbsnodes_va.out')
-            snap_hooks = os.path.join(self.snap, 'hook',
-                                      'qmgr_ph_default.out')
-            snap_ps = os.path.join(self.snap, 'server', 'qmgr_ps.out')
-            snap_psched = os.path.join(self.snap, 'scheduler',
-                                       'qmgr_psched.out')
-            snap_pq = os.path.join(self.snap, 'server', 'qmgr_pq.out')
+            snap_rdef = self.class_separator.join([self.snap, 'server_priv', 'resourcedef'])
+            snap_sc = self.class_separator.join([self.snap, 'sched_priv', 'sched_config'])
+            snap_rg = self.class_separator.join([self.snap, 'sched_priv', 'resource_group'])
+            snap_hldy = self.class_separator.join([self.snap, 'sched_priv', 'holidays'])
+            nodes = self.class_separator.join([self.snap, 'node', 'pbsnodes_va.out'])
+            snap_hooks = self.class_separator.join([self.snap, 'hook',
+                                      'qmgr_ph_default.out'])
+            snap_ps = self.class_separator.join([self.snap, 'server', 'qmgr_ps.out'])
+            snap_psched = self.class_separator.join([self.snap, 'scheduler',
+                                       'qmgr_psched.out'])
+            snap_pq = self.class_separator.join([self.snap, 'server', 'qmgr_pq.out'])
 
-            local_rdef = os.path.join(local, 'server_priv', 'resourcedef')
-            local_sc = os.path.join(local, 'sched_priv', 'sched_config')
-            local_rg = os.path.join(local, 'sched_priv', 'resource_group')
-            local_hldy = os.path.join(local, 'sched_priv', 'holidays')
+            local_rdef = self.class_separator.join([local, 'server_priv', 'resourcedef'])
+            local_sc = self.class_separator.join([local, 'sched_priv', 'sched_config'])
+            local_rg = self.class_separator.join([local, 'sched_priv', 'resource_group'])
+            local_hldy = self.class_separator.join([local, 'sched_priv', 'holidays'])
 
             _fcopy = [(snap_rdef, local_rdef), (snap_sc, local_sc),
                       (snap_rg, local_rg), (snap_hldy, local_hldy)]
@@ -10666,8 +10674,8 @@ class Server(PBSService):
 
             if os.path.isfile(snap_ps):
                 with open(snap_ps) as tmp_ps:
-                    cmd = [os.path.join(svr.pbs_conf['PBS_EXEC'], 'bin',
-                                        'qmgr')]
+                    cmd = [self.class_separator.join([svr.pbs_conf['PBS_EXEC'], 'bin',
+                                        'qmgr'])]
                     self.du.run_cmd(h, cmd, stdin=tmp_ps, sudo=True,
                                     logerr=False)
             else:
@@ -10687,8 +10695,8 @@ class Server(PBSService):
 
             if os.path.isfile(snap_pq):
                 with open(snap_pq) as tmp_pq:
-                    cmd = [os.path.join(svr.pbs_conf['PBS_EXEC'], 'bin',
-                                        'qmgr')]
+                    cmd = [self.class_separator.join([svr.pbs_conf['PBS_EXEC'], 'bin',
+                                        'qmgr'])]
                     self.du.run_cmd(h, cmd, stdin=tmp_pq, sudo=True,
                                     logerr=False)
             else:
@@ -10696,8 +10704,8 @@ class Server(PBSService):
 
             if os.path.isfile(snap_psched):
                 with open(snap_psched) as tmp_psched:
-                    cmd = [os.path.join(svr.pbs_conf['PBS_EXEC'], 'bin',
-                                        'qmgr')]
+                    cmd = [self.class_separator.join([svr.pbs_conf['PBS_EXEC'], 'bin',
+                                        'qmgr'])]
                     self.du.run_cmd(h, cmd, stdin=tmp_psched, sudo=True,
                                     logerr=False)
             else:
@@ -10740,8 +10748,8 @@ class Server(PBSService):
                 if len(hooks) > 0:
                     svr.manager(MGR_CMD_DELETE, HOOK, id=hooks)
                 with open(snap_hooks) as tmp_hook:
-                    cmd = [os.path.join(svr.pbs_conf['PBS_EXEC'], 'bin',
-                                        'qmgr')]
+                    cmd = [self.class_separator.join([svr.pbs_conf['PBS_EXEC'], 'bin',
+                                        'qmgr'])]
                     self.du.run_cmd(h, cmd, stdin=tmp_hook, sudo=True)
             else:
                 self.logger.error("hooks information not found in snapshot")
@@ -11058,18 +11066,18 @@ class Scheduler(PBSService):
         self.pbs_conf = self.server.pbs_conf
         self.sc_name = id
 
-        self.dflt_sched_config_file = os.path.join(self.pbs_conf['PBS_EXEC'],
-                                                   'etc', 'pbs_sched_config')
+        self.dflt_sched_config_file = self.class_separator.join([self.pbs_conf['PBS_EXEC'],
+                                                   'etc', 'pbs_sched_config'])
 
-        self.dflt_holidays_file = os.path.join(self.pbs_conf['PBS_EXEC'],
-                                               'etc', 'pbs_holidays')
+        self.dflt_holidays_file = self.class_separator.join([self.pbs_conf['PBS_EXEC'],
+                                               'etc', 'pbs_holidays'])
 
-        self.dflt_resource_group_file = os.path.join(self.pbs_conf['PBS_EXEC'],
+        self.dflt_resource_group_file = self.class_separator.join([self.pbs_conf['PBS_EXEC'],
                                                      'etc',
-                                                     'pbs_resource_group')
-        self.dflt_dedicated_file = os.path.join(self.pbs_conf['PBS_EXEC'],
+                                                     'pbs_resource_group'])
+        self.dflt_dedicated_file = self.class_separator.join([self.pbs_conf['PBS_EXEC'],
                                                 'etc',
-                                                'pbs_dedicated')
+                                                'pbs_dedicated'])
         self.setup_sched_priv(sched_priv)
 
         self.db_access = db_access
@@ -11088,14 +11096,14 @@ class Scheduler(PBSService):
             if 'sched_priv' in self.attributes:
                 sched_priv = self.attributes['sched_priv']
             else:
-                sched_priv = os.path.join(self.pbs_conf['PBS_HOME'],
-                                          'sched_priv')
+                sched_priv = self.class_separator.join([self.pbs_conf['PBS_HOME'],
+                                          'sched_priv'])
 
-        self.sched_config_file = os.path.join(sched_priv, 'sched_config')
-        self.resource_group_file = os.path.join(sched_priv, 'resource_group')
-        self.holidays_file = os.path.join(sched_priv, 'holidays')
-        self.set_dedicated_time_file(os.path.join(sched_priv,
-                                                  'dedicated_time'))
+        self.sched_config_file = self.class_separator.join([sched_priv, 'sched_config'])
+        self.resource_group_file = self.class_separator.join([sched_priv, 'resource_group'])
+        self.holidays_file = self.class_separator.join([sched_priv, 'holidays'])
+        self.set_dedicated_time_file(self.class_separator.join([sched_priv,
+                                                  'dedicated_time']))
 
         if not os.path.exists(sched_priv):
             return
@@ -11165,8 +11173,8 @@ class Scheduler(PBSService):
         :type launcher: str or list
         """
         if self.attributes['id'] != 'default':
-            cmd = [os.path.join(self.pbs_conf['PBS_EXEC'],
-                                'sbin', 'pbs_sched')]
+            cmd = [self.class_separator.join([self.pbs_conf['PBS_EXEC'],
+                                'sbin', 'pbs_sched'])]
             cmd += ['-I', self.attributes['id']]
             cmd += ['-S', str(self.attributes['sched_port'])]
             if sched_home is not None:
@@ -11506,9 +11514,9 @@ class Scheduler(PBSService):
                 if 'sched_priv' in self.attributes:
                     sched_priv = self.attributes['sched_priv']
                 else:
-                    sched_priv = os.path.join(self.pbs_conf['PBS_HOME'],
-                                              "sched_priv")
-                sp = os.path.join(sched_priv, "sched_config")
+                    sched_priv = self.class_separator.join([self.pbs_conf['PBS_HOME'],
+                                              "sched_priv"])
+                sp = self.class_separator.join([sched_priv, "sched_config"])
             else:
                 sp = path
             self.du.run_copy(self.hostname, src=fn, dest=sp,
@@ -11606,7 +11614,7 @@ class Scheduler(PBSService):
             tmp_file = self.du.create_temp_file(prefix=prefix, suffix=suffix,
                                                 body=script_body,
                                                 hostname=host)
-            res_file = os.path.join(dirname, tmp_file.split(os.path.sep)[-1])
+            res_file = self.class_separator.join([dirname, tmp_file.split(os.path.sep)[-1]])
             self.du.run_copy(host, src=tmp_file, dest=res_file, sudo=True,
                              preserve_permission=False)
             self.du.chown(hostname=host, path=res_file, uid=0, gid=0,
@@ -11688,7 +11696,7 @@ class Scheduler(PBSService):
 
         self.signal('-HUP')
         # Revert fairshare usage
-        cmd = [os.path.join(self.pbs_conf['PBS_EXEC'], 'sbin', 'pbsfs'), '-e']
+        cmd = [self.class_separator.join([self.pbs_conf['PBS_EXEC'], 'sbin', 'pbsfs']), '-e']
         if self.sc_name is not 'default':
             cmd += ['-I', self.sc_name]
         self.du.run_cmd(cmd=cmd, sudo=True)
@@ -11708,10 +11716,10 @@ class Scheduler(PBSService):
         """
         if sched_home is None:
             sched_home = self.server.pbs_conf['PBS_HOME']
-        sched_priv_dir = os.path.join(sched_home,
-                                      self.attributes['sched_priv'])
-        sched_logs_dir = os.path.join(sched_home,
-                                      self.attributes['sched_log'])
+        sched_priv_dir = self.class_separator.join([sched_home,
+                                      self.attributes['sched_priv']])
+        sched_logs_dir = self.class_separator.join([sched_home,
+                                      self.attributes['sched_log']])
         if not os.path.exists(sched_priv_dir):
             self.du.mkdir(path=sched_priv_dir, sudo=True)
             self.du.run_copy(self.hostname, src=self.dflt_resource_group_file,
@@ -11747,15 +11755,14 @@ class Scheduler(PBSService):
         if 'sched_priv' in self.attributes:
             sched_priv = self.attributes['sched_priv']
         else:
-            sched_priv = os.path.join(
-                self.pbs_conf['PBS_HOME'], 'sched_priv')
-        sc = os.path.join(sched_priv, 'sched_config')
+            sched_priv = self.class_separator.join([self.pbs_conf['PBS_HOME'], 'sched_priv'])
+        sc = self.class_separator.join([sched_priv, 'sched_config'])
         self._save_config_file(conf, sc)
-        rg = os.path.join(sched_priv, 'resource_group')
+        rg = self.class_separator.join([sched_priv, 'resource_group'])
         self._save_config_file(conf, rg)
-        dt = os.path.join(sched_priv, 'dedicated_time')
+        dt = self.class_separator.join([sched_priv, 'dedicated_time'])
         self._save_config_file(conf, dt)
-        hd = os.path.join(sched_priv, 'holidays')
+        hd = self.class_separator.join([sched_priv, 'holidays'])
         self._save_config_file(conf, hd)
 
         self.server.saved_config[MGR_OBJ_SCHED] = conf
@@ -12453,8 +12460,8 @@ class Scheduler(PBSService):
         elif self.dedicated_time_file:
             dt_file = self.dedicated_time_file
         else:
-            dt_file = os.path.join(self.pbs_conf['PBS_HOME'], 'sched_priv',
-                                   'dedicated_time')
+            dt_file = self.class_separator.join([self.pbs_conf['PBS_HOME'], 'sched_priv',
+                                   'dedicated_time'])
         try:
             lines = self.du.cat(self.hostname, dt_file, sudo=True)['out']
             if lines is None:
@@ -12541,8 +12548,8 @@ class Scheduler(PBSService):
             with open(fn, "w") as fd:
                 for l in self.dedicated_time_as_str:
                     fd.write(l + '\n')
-            ddfile = os.path.join(self.pbs_conf['PBS_HOME'], 'sched_priv',
-                                  'dedicated_time')
+            ddfile = self.class_separator.join([self.pbs_conf['PBS_HOME'], 'sched_priv',
+                                  'dedicated_time'])
             self.du.run_copy(self.hostname, src=fn, dest=ddfile, sudo=True,
                              preserve_permission=False)
             os.remove(fn)
@@ -12575,9 +12582,9 @@ class Scheduler(PBSService):
 
         cmd = ['valgrind']
 
-        cmd += ["--log-file=" + os.path.join(tempfile.gettempdir(),
-                                             'schd.vlgrd')]
-        cmd += [os.path.join(self.pbs_conf['PBS_EXEC'], 'sbin', 'pbs_sched')]
+        cmd += ["--log-file=" + self.class_separator.join([tempfile.gettempdir(),
+                                             'schd.vlgrd'])]
+        cmd += [self.class_separator.join([self.pbs_conf['PBS_EXEC'], 'sbin', 'pbs_sched'])]
 
         return self.du.run_cmd(self.hostname, cmd, sudo=True)
 
@@ -12623,10 +12630,10 @@ class Scheduler(PBSService):
         if 'sched_log' in self.attributes:
             logdir = self.attributes['sched_log']
         else:
-            logdir = os.path.join(self.pbs_conf['PBS_HOME'], 'sched_logs')
+            logdir = self.class_separator.join([self.pbs_conf['PBS_HOME'], 'sched_logs'])
 
         tm = time.strftime("%Y%m%d", time.localtime())
-        log_file = os.path.join(logdir, tm)
+        log_file = self.class_separator.join([logdir, tm])
 
         if start is not None or end is not None:
             analyze_path = os.path.dirname(log_file)
@@ -12657,7 +12664,7 @@ class Scheduler(PBSService):
             return None
 
         tree = FairshareTree()
-        cmd = [os.path.join(self.pbs_conf['PBS_EXEC'], 'sbin', 'pbsfs')]
+        cmd = [self.class_separator.join([self.pbs_conf['PBS_EXEC'], 'sbin', 'pbsfs'])]
         if self.sc_name != 'default':
             cmd += ['-I', self.sc_name]
         ret = self.du.run_cmd(self.hostname, cmd, sudo=True, logerr=False)
@@ -12749,7 +12756,7 @@ class Scheduler(PBSService):
             self.logger.error(self.logprefix + ' a usage is required')
             return False
 
-        cmd = [os.path.join(self.pbs_conf['PBS_EXEC'], 'sbin', 'pbsfs')]
+        cmd = [self.class_separator.join([self.pbs_conf['PBS_EXEC'], 'sbin', 'pbsfs'])]
         if self.sc_name is not 'default':
             cmd += ['-I', self.sc_name]
         cmd += ['-s', name, str(usage)]
@@ -12765,7 +12772,7 @@ class Scheduler(PBSService):
         if self.has_snap:
             return True
 
-        cmd = [os.path.join(self.pbs_conf['PBS_EXEC'], 'sbin', 'pbsfs')]
+        cmd = [self.class_separator.join([self.pbs_conf['PBS_EXEC'], 'sbin', 'pbsfs'])]
         if self.sc_name is not 'default':
             cmd += ['-I', self.sc_name]
         cmd += ['-d']
@@ -12800,7 +12807,7 @@ class Scheduler(PBSService):
         if isinstance(name2, PbsUser):
             name2 = str(name2)
 
-        cmd = [os.path.join(self.pbs_conf['PBS_EXEC'], 'sbin', 'pbsfs')]
+        cmd = [self.class_separator.join([self.pbs_conf['PBS_EXEC'], 'sbin', 'pbsfs'])]
         if self.sc_name is not 'default':
             cmd += ['-I', self.sc_name]
         cmd += ['-c', name1, name2]
@@ -13210,8 +13217,8 @@ class MoM(PBSService):
         self.logprefix = "".join(_m)
         self.pi = PBSInitServices(hostname=self.hostname,
                                   conf=self.pbs_conf_file)
-        self.configd = os.path.join(self.pbs_conf['PBS_HOME'], 'mom_priv',
-                                    'config.d')
+        self.configd = self.class_separator.join([self.pbs_conf['PBS_HOME'], 'mom_priv',
+                                    'config.d'])
         self.config = {}
         if self.platform == 'cray' or self.platform == 'craysim':
             usecp = os.path.realpath('/home')
@@ -13409,7 +13416,7 @@ class MoM(PBSService):
         if self.version:
             return self.version
 
-        exe = os.path.join(self.pbs_conf['PBS_EXEC'], 'sbin', 'pbs_mom')
+        exe = self.class_separator.join([self.pbs_conf['PBS_EXEC'], 'sbin', 'pbs_mom'])
         version = self.du.run_cmd(self.hostname,
                                   [exe, '--version'], sudo=True)['out']
         if version:
@@ -13508,15 +13515,15 @@ class MoM(PBSService):
                   should save with mode 'a' or 'a+'. Defaults to a+
         """
         conf = {}
-        mpriv = os.path.join(self.pbs_conf['PBS_HOME'], 'mom_priv')
-        cf = os.path.join(mpriv, 'config')
+        mpriv = self.class_separator.join([self.pbs_conf['PBS_HOME'], 'mom_priv'])
+        cf = self.class_separator.join([mpriv, 'config'])
         self._save_config_file(conf, cf)
 
-        if os.path.isdir(os.path.join(mpriv, 'config.d')):
-            for f in self.du.listdir(path=os.path.join(mpriv, 'config.d'),
+        if os.path.isdir(self.class_separator.join([mpriv, 'config.d'])):
+            for f in self.du.listdir(path=self.class_separator.join([mpriv, 'config.d']),
                                      sudo=True):
                 self._save_config_file(conf,
-                                       os.path.join(mpriv, 'config.d', f))
+                                       self.class_separator.join([mpriv, 'config.d', f]))
         mconf = {self.hostname: conf}
         if MGR_OBJ_NODE not in self.server.saved_config:
             self.server.saved_config[MGR_OBJ_NODE] = {}
@@ -13714,8 +13721,8 @@ class MoM(PBSService):
                   and None otherwise
         """
         try:
-            mconf = os.path.join(self.pbs_conf['PBS_HOME'], 'mom_priv',
-                                 'config')
+            mconf = self.class_separator.join([self.pbs_conf['PBS_HOME'], 'mom_priv',
+                                 'config'])
             ret = self.du.cat(self.hostname, mconf, sudo=True)
             if ret['rc'] != 0:
                 self.logger.error('error parsing configuration file')
@@ -13820,8 +13827,7 @@ class MoM(PBSService):
                             f.write(str(k) + ' ' + str(eachprop) + '\n')
                     else:
                         f.write(str(k) + ' ' + str(v) + '\n')
-            dest = os.path.join(
-                self.pbs_conf['PBS_HOME'], 'mom_priv', 'config')
+            dest = self.class_separator.join([self.pbs_conf['PBS_HOME'], 'mom_priv', 'config'])
             self.du.run_copy(self.hostname, src=fn, dest=dest,
                              preserve_permission=False, sudo=True)
             os.remove(fn)
@@ -13873,7 +13879,7 @@ class MoM(PBSService):
             fname = 'pbs_vnode_' + str(int(time.time())) + '.def'
         if not additive:
             self.delete_vnode_defs()
-        cmd = [os.path.join(self.pbs_conf['PBS_EXEC'], 'sbin', 'pbs_mom')]
+        cmd = [self.class_separator.join([self.pbs_conf['PBS_EXEC'], 'sbin', 'pbs_mom'])]
         option = self.ps.get_pbs_mom_option(self.hostname)
         if option is not None:
             cmd += [str(option)]
@@ -13893,7 +13899,7 @@ class MoM(PBSService):
         """
         Check for vnode definition(s)
         """
-        cmd = [os.path.join(self.pbs_conf['PBS_EXEC'], 'sbin', 'pbs_mom')]
+        cmd = [self.class_separator.join([self.pbs_conf['PBS_EXEC'], 'sbin', 'pbs_mom'])]
         option = self.ps.get_pbs_mom_option(self.hostname)
         if option is not None:
             cmd += [str(option)]
@@ -13918,7 +13924,7 @@ class MoM(PBSService):
         :type vdefname: str
         :returns: True if delete succeed otherwise False
         """
-        cmd = [os.path.join(self.pbs_conf['PBS_EXEC'], 'sbin', 'pbs_mom')]
+        cmd = [self.class_separator.join([self.pbs_conf['PBS_EXEC'], 'sbin', 'pbs_mom'])]
         option = self.ps.get_pbs_mom_option(self.hostname)
         if option is not None:
             cmd += [str(option)]
@@ -13934,8 +13940,8 @@ class MoM(PBSService):
                 if (vnodedef == vdefname) or vdefname is None:
                     if vnodedef.startswith('PBS'):
                         continue
-                    cmd = [os.path.join(self.pbs_conf['PBS_EXEC'], 'sbin',
-                                        'pbs_mom')]
+                    cmd = [self.class_separator.join([self.pbs_conf['PBS_EXEC'], 'sbin',
+                                        'pbs_mom'])]
                     if option is not None:
                         cmd += [str(option)]
                     cmd += ['-s', 'remove', vnodedef]
@@ -13954,8 +13960,8 @@ class MoM(PBSService):
         _has_pro = False
         _has_epi = False
         phome = self.pbs_conf['PBS_HOME']
-        prolog = os.path.join(phome, 'mom_priv', 'prologue')
-        epilog = os.path.join(phome, 'mom_priv', 'epilogue')
+        prolog = self.class_separator.join([phome, 'mom_priv', 'prologue'])
+        epilog = self.class_separator.join([phome, 'mom_priv', 'epilogue'])
         if self.du.isfile(self.hostname, path=prolog, sudo=True):
             _has_pro = True
         if filename == 'prologue':
@@ -13986,8 +13992,8 @@ class MoM(PBSService):
         defined on this MoM
         """
         phome = self.pbs_conf['PBS_HOME']
-        prolog = os.path.join(phome, 'mom_priv', 'prologue')
-        epilog = os.path.join(phome, 'mom_priv', 'epilogue')
+        prolog = self.class_separator.join([phome, 'mom_priv', 'prologue'])
+        epilog = self.class_separator.join([phome, 'mom_priv', 'epilogue'])
         ret = self.du.rm(self.hostname, epilog, force=True,
                          sudo=True, logerr=False)
         if ret:
@@ -14016,7 +14022,7 @@ class MoM(PBSService):
             self.logger.error('file and body of script are required')
             return False
 
-        pelog = os.path.join(self.pbs_conf['PBS_HOME'], 'mom_priv', filename)
+        pelog = self.class_separator.join([self.pbs_conf['PBS_HOME'], 'mom_priv', filename])
 
         self.logger.info(self.logprefix +
                          ' creating ' + filename + ' with body\n' + '---')
@@ -14099,7 +14105,7 @@ class MoM(PBSService):
             tmp_file = self.du.create_temp_file(prefix=prefix, suffix=suffix,
                                                 body=script_body)
 
-            res_file = os.path.join(dirname, tmp_file.split(os.path.sep)[-1])
+            res_file = self.class_separator.join([dirname, tmp_file.split(os.path.sep)[-1]])
             self.du.run_copy(host, src=tmp_file, dest=res_file, sudo=True,
                              preserve_permission=False)
             self.du.chown(hostname=host, path=res_file, uid=0, gid=0,
@@ -14122,7 +14128,7 @@ class MoM(PBSService):
         Configure and enable cgroups hook
         """
         # check if cgroups subsystems including cpusets are mounted
-        file = os.path.join(os.sep, 'proc', 'mounts')
+        file = self.class_separator.join([os.sep, 'proc', 'mounts'])
         mounts = self.du.cat(self.hostname, file)['out']
         pat = 'cgroup /sys/fs/cgroup'
         enablemem = False
@@ -14135,9 +14141,9 @@ class MoM(PBSService):
                 enablemem = True
         if str(mounts).count(pat) >= 6 and str(mounts).count('cpuset') >= 2:
             pbs_conf_val = self.du.parse_pbs_config(self.hostname)
-            f1 = os.path.join(pbs_conf_val['PBS_EXEC'], 'lib',
+            f1 = self.class_separator.join([pbs_conf_val['PBS_EXEC'], 'lib',
                               'python', 'altair', 'pbs_hooks',
-                              'pbs_cgroups.CF')
+                              'pbs_cgroups.CF'])
             # set vnode_per_numa_node = true, use_hyperthreads = true
             with open(f1, "r") as cfg:
                 cfg_dict = json.load(cfg)
@@ -14298,9 +14304,11 @@ class Job(ResourceResv):
     }
     runtime = 100
     du = DshUtils()
+    ps = PlatformSwitch()
 
     def __init__(self, username=TEST_USER, attrs={}, jobname=None):
         self.platform = self.du.get_platform()
+        self.class_separator = self.ps.get_path_separator(platform=self.platform)
         self.server = {}
         self.script = None
         self.script_body = None
@@ -14423,8 +14431,8 @@ class Job(ResourceResv):
         if self.du is None:
             self.du = DshUtils()
         pbs_conf = self.du.parse_pbs_config(socket.gethostname())
-        sleep_cmd = os.path.join(pbs_conf['PBS_EXEC'],
-                                 'bin', 'pbs_sleep')
+        sleep_cmd = self.class_separator.join([pbs_conf['PBS_EXEC'],
+                                 'bin', 'pbs_sleep'])
         self.set_execargs(sleep_cmd, duration)
 
     def set_execargs(self, executable, arguments=None):
@@ -14581,8 +14589,8 @@ while True:
                 raise AssertionError("Failed to copy file %s to %s"
                                      % (script_path, hostname))
         pbs_conf = self.du.parse_pbs_config(hostname)
-        shell_path = os.path.join(pbs_conf['PBS_EXEC'],
-                                  'bin', 'pbs_python')
+        shell_path = self.class_separator.join([pbs_conf['PBS_EXEC'],
+                                  'bin', 'pbs_python'])
         a = {ATTR_S: shell_path}
         self.set_attributes(a)
         mode = 0o755
@@ -15173,6 +15181,7 @@ class PBSInitServices(object):
                 msg = 'Missing PBS_EXEC setting in pbs config'
                 raise PbsInitServicesError(rc=1, rv=False, msg=msg)
             if init_script is None:
+                #LOOK AT THIS - DON'T NEED TO CHANGE
                 init_script = os.path.join(conf['PBS_EXEC'], 'libexec',
                                            'pbs_init.d')
             else:
@@ -15210,13 +15219,13 @@ class PBSInitServices(object):
         pbs_conf = self.du.parse_pbs_config(hostname)
         if 'PBS_EXEC' in pbs_conf:
             dn = os.path.dirname(pbs_conf['PBS_EXEC'])
-            newver = os.path.join(dn, version)
+            newver = self.class_separator.join([dn, version])
             ret = self.du.isdir(hostname, path=newver)
             if not ret:
                 msg = 'no version ' + version + ' on host ' + hostname
                 raise PbsInitServicesError(rc=0, rv=False, msg=msg)
             self.stop(hostname)
-            dflt = os.path.join(dn, 'default')
+            dflt = self.class_separator.join([dn, 'default'])
             ret = self.du.isfile(hostname, path=dflt)
             if ret:
                 self.logger.info('removing symbolic link ' + dflt)

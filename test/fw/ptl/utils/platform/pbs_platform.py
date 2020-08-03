@@ -39,6 +39,7 @@
 
 import os
 import importlib
+import logging
 import copy
 import sys
 import socket
@@ -49,6 +50,7 @@ class PlatformSwitch():
 
     _p2o = {}  # platform to object cache
     _h2p = {}
+    logger = logging.getLogger(__name__)
 
     def get_platform_object(self, hostname=None, platform=None):
         if platform is not None:
@@ -246,3 +248,6 @@ class PlatformSwitch():
 
     def get_pbs_mom_option(self, hostname):
         return self.get_platform_object(hostname).get_pbs_mom_option()
+
+    def get_path_separator(self, platform):
+        return self.get_platform_object(hostname=None, platform=platform).get_path_separator()

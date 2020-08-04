@@ -11716,10 +11716,10 @@ class Scheduler(PBSService):
         """
         if sched_home is None:
             sched_home = self.server.pbs_conf['PBS_HOME']
-        sched_priv_dir = self.class_separator.join([sched_home,
-                                      self.attributes['sched_priv']])
-        sched_logs_dir = self.class_separator.join([sched_home,
-                                      self.attributes['sched_log']])
+        sched_priv_dir = os.path.join(sched_home,
+                                      self.attributes['sched_priv'])
+        sched_logs_dir = os.path.join(sched_home,
+                                      self.attributes['sched_log'])
         if not os.path.exists(sched_priv_dir):
             self.du.mkdir(path=sched_priv_dir, sudo=True)
             self.du.run_copy(self.hostname, src=self.dflt_resource_group_file,

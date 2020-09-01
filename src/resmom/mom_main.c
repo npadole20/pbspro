@@ -8613,7 +8613,7 @@ main(int argc, char *argv[])
 
 #ifdef	WIN32
 	secure_file("mom.lock", "Administrators",
-		READS_MASK|WRITES_MASK|STANDARD_RIGHTS_REQUIRED);
+		WRITES_MASK|STANDARD_RIGHTS_REQUIRED);
 #endif
 	mom_lock(lockfds, F_WRLCK);	/* See if other MOMs are running */
 

@@ -4803,11 +4803,14 @@ req_copy_hookfile(struct batch_request *preq) /* ptr to the decoded request   */
 		free_str_array(prev_resources);
 		return;
 	}
-
+/*
 #ifdef WIN32
 	secure_file2(namebuf, "Administrators", READS_MASK|WRITES_MASK|STANDARD_RIGHTS_REQUIRED, "Everyone", READS_MASK|READ_CONTROL);
 	setmode(fds, O_BINARY);
-#endif /* WIN32 */
+#endif*/ /* WIN32 */
+
+	log_eventf(PBSEVENT_DEBUG, PBS_EVENTCLASS_JOB, LOG_DEBUG,
+		__func__, "in req_copy_hookfile, opened file %s to copy", namebuf);
 
 	if (write(fds, preq->rq_ind.rq_hookfile.rq_data,
 		(unsigned)preq->rq_ind.rq_hookfile.rq_size) !=

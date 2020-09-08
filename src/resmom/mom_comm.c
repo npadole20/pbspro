@@ -256,10 +256,15 @@ task_save(pbs_task *ptask)
 		return (-1);
 	}
 
+
+/*
 #ifdef WIN32
 	secure_file(namebuf, "Administrators",
 		READS_MASK|WRITES_MASK|STANDARD_RIGHTS_REQUIRED);
 #endif
+*/
+	log_eventf(PBSEVENT_DEBUG, PBS_EVENTCLASS_JOB, LOG_DEBUG,
+		__func__, "in task_save, opened file %s to save stuff to disk", namebuf);
 
 	/* just write the "critical" base structure to the file */
 

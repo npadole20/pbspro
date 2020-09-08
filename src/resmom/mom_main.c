@@ -8423,14 +8423,14 @@ main(int argc, char *argv[])
 	ss.dwWaitHint = 20000;
 	if (g_ssHandle != 0) SetServiceStatus(g_ssHandle, &ss);
 
-	secure_misc_files();
+	//secure_misc_files();
 
 	/* let SCM wait 30 seconds for secure_mom_files() to complete */
 	ss.dwCheckPoint++;
 	ss.dwWaitHint = 30000;
 	if (g_ssHandle != 0) SetServiceStatus(g_ssHandle, &ss);
 
-	secure_mom_files();
+	//secure_mom_files();
 
 
 #else
@@ -8611,10 +8611,14 @@ main(int argc, char *argv[])
 		return (1);
 	}
 
+/*
 #ifdef	WIN32
 	secure_file("mom.lock", "Administrators",
 		WRITES_MASK|STANDARD_RIGHTS_REQUIRED);
 #endif
+*/
+	log_event(PBSEVENT_DEBUG, PBS_EVENTCLASS_JOB, LOG_DEBUG,
+		__func__, "in main, opened mom.lock file");
 	mom_lock(lockfds, F_WRLCK);	/* See if other MOMs are running */
 
 	if (read_config(NULL)) {

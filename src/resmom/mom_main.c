@@ -7855,10 +7855,6 @@ main(int argc, char *argv[])
 		return (1);
 	}
 
-#ifdef	WIN32
-	secure_file("mom.lock", "Administrators",
-		WRITES_MASK|STANDARD_RIGHTS_REQUIRED);
-#endif
 	if (lock_file(lockfds, F_WRLCK, "mom.lock", 1, NULL, 0)) {	/* See if other MOMs are running */
 		log_errf(errno, msg_daemonname, "pbs_mom: another mom running");
 		fprintf(stderr, "%s\n", "pbs_mom: another mom running");

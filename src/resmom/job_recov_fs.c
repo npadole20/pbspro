@@ -174,11 +174,11 @@ job_save_fs(job *pjob)
 			log_errf(errno, __func__, "Failed to open %s file", namebuf1);
 			return (-1);
 		}
-#ifdef WIN32
+/*#ifdef WIN32
 		secure_file(namebuf1, "Administrators",
 			READS_MASK|WRITES_MASK|STANDARD_RIGHTS_REQUIRED);
 		setmode(fds, O_BINARY);
-#endif
+#endif*/
 
 		/* just write the "critical" base structure to the file */
 

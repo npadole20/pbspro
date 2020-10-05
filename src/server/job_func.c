@@ -1232,10 +1232,10 @@ write_cred(job *pjob, char *cred, size_t len)
 		return -1;
 	}
 
-#ifdef WIN32
+/*#ifdef WIN32
 	secure_file(name_buf, "Administrators", READS_MASK|WRITES_MASK|STANDARD_RIGHTS_REQUIRED);
 	setmode(cred_fd, O_BINARY);
-#endif
+#endif*/
 
 	if (write(cred_fd, cred, len) != len) {
 		log_err(errno, __func__, "write cred");

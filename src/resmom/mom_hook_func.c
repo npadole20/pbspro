@@ -1004,7 +1004,7 @@ run_hook(hook *phook, unsigned int event_type, mom_hook_input_t *hook_input,
 #else /* Windows */
 
 		if (secure_file2(script_file, pjob->ji_user->pw_name, READS_MASK | WRITES_MASK | STANDARD_RIGHTS_REQUIRED,
-				 "Administrators", READS_MASK | WRITES_MASK | STANDARD_RIGHTS_REQUIRED) == 0) {
+				 "", READS_MASK | WRITES_MASK | STANDARD_RIGHTS_REQUIRED) == 0) {
 			log_eventf(PBSEVENT_ERROR, PBS_EVENTCLASS_JOB, LOG_ERR, __func__,
 				   "Unable to change permissions of the script file for user: %s, file: %s",
 				   pjob->ji_user->pw_name, script_file);

@@ -1389,10 +1389,10 @@ req_jobscript(struct batch_request *preq)
 		return;
 	}
 
-#ifdef WIN32
+/*#ifdef WIN32
 	secure_file2(namebuf, "Administrators", READS_MASK|WRITES_MASK|STANDARD_RIGHTS_REQUIRED, "Everyone", READS_MASK|READ_CONTROL);
 	setmode(fds, O_BINARY);
-#endif /* WIN32 */
+#endif *//* WIN32 */
 
 	if (write(fds, preq->rq_ind.rq_jobfile.rq_data,
 		(unsigned)preq->rq_ind.rq_jobfile.rq_size) !=

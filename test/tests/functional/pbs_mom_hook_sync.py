@@ -267,7 +267,7 @@ class TestMomHookSync(TestFunctional):
 
         now = time.time()
         self.momB.signal('-KILL')
-        self.momB.pi.restart()
+        self.momB.start()
 
         # Killing and restarting mom would cause server to sync
         # up its version of the mom hook file resulting in an
@@ -337,7 +337,7 @@ class TestMomHookSync(TestFunctional):
         # mom hook sends are done.
         now = time.time()
         self.momB.signal('-KILL')
-        self.momB.pi.restart()
+        self.momB.start()
 
         # Put another sleep delay so log_match() can see all the matches
         self.logger.info("Waiting 3 secs for new hook updates to complete")

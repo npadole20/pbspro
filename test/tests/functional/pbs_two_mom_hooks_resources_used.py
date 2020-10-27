@@ -129,7 +129,7 @@ class TestAcctlogRescUsedWithTwoMomHooks(TestFunctional):
         test = []
         test += ['#PBS -N JobEndTest\n']
         test += ['echo Starting test at `date`\n']
-        test += ['sleep 1\n']
+        test += ['pbs_sleep 10\n']
 
         select = "vnode=" + self.hostA + "+vnode=" + self.hostB
         j1 = Job(TEST_USER, attrs={

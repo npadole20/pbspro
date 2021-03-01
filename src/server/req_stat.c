@@ -298,6 +298,7 @@ req_stat_job(struct batch_request *preq)
 	int dosubjobs = 0;
 	int dohistjobs = 0;
 	char *name;
+	char jobname[1024] = {'\0'};
 	job *pjob = NULL;
 	pbs_queue *pque = NULL;
 	struct batch_reply *preply;
@@ -333,6 +334,7 @@ req_stat_job(struct batch_request *preq)
 	 */
 
 	name = preq->rq_ind.rq_status.rq_id;
+	strcpy(jobname, name);
 
 	if (isdigit((int) *name)) {
 		/* a single job id */
@@ -382,9 +384,12 @@ req_stat_job(struct batch_request *preq)
 			if ((rc = stat_a_jobidname(preq, name, dohistjobs, dosubjobs)) == PBSE_NONE)
 				at_least_one_success = 1;
 		}
-		if (at_least_one_success == 1)
+		if (at_least_one_success == 1) {
 			reply_send(preq);
-		else
+			sprintf(log_buffer, "sent reply for job %s for request by user %s", jobname, preq->rq_user);
+			log_event(PBSEVENT_DEBUG, PBS_EVENTCLASS_JOB, LOG_DEBUG,
+				__func__, log_buffer);
+		} else
 			req_reject(rc, 0, preq);
 		return;
 
@@ -407,8 +412,12 @@ req_stat_job(struct batch_request *preq)
 
 	if (rc && rc != PBSE_PERM)
 		req_reject(rc, bad, preq);
-	else
+	else {
 		reply_send(preq);
+		sprintf(log_buffer, "sent reply for all jobs for request by user %s", preq->rq_user);
+		log_event(PBSEVENT_DEBUG, PBS_EVENTCLASS_JOB, LOG_DEBUG,
+			__func__, log_buffer);
+	}
 }
 
 /**

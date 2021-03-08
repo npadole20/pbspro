@@ -73,6 +73,12 @@ extern char *	tcl_atrsep;
 #endif /* localmod 071 */
 #endif
 
+#ifndef WIN32
+#define LOGFILE "/tmp/qstat_temp3.log"
+#else
+#define LOGFILE "C:\\Users\\nehap\\qstat_temp.log"
+#endif
+
 /* default server */
 char *def_server;
 
@@ -368,6 +374,33 @@ convert_feed_chars(char *val) {
 	return buf;
 }
 
+void write_value ( char *msg ) {
+
+	time_t current_time;
+	struct tm tm;
+	struct timeval tv;
+	char microsec_buf[8];
+	char log_buff[1024] = {'\0'};
+	FILE *logfd = NULL;
+
+
+	current_time = time(NULL);
+	tm = *localtime(&current_time); 	// convert time_t to struct tm
+    gettimeofday(&tv,NULL);
+	snprintf(microsec_buf, sizeof(microsec_buf), ".%06ld", (long)tv.tv_usec);
+
+	sprintf(log_buff,
+			"%02d/%02d/%04d %02d:%02d:%02d%s; %s\n",
+			tm.tm_mon + 1, tm.tm_mday, tm.tm_year + 1900,
+			tm.tm_hour, tm.tm_min, tm.tm_sec, microsec_buf, (msg == NULL) ? "Done serving request" : msg);
+
+	/* Write to log file */
+	logfd = fopen (LOGFILE, "a");
+	fprintf (logfd, "%s", log_buff);
+	fclose (logfd);
+	logfd = NULL;
+}
+
 /**
  * @brief
  *	print the exit message and die.
@@ -375,6 +408,7 @@ convert_feed_chars(char *val) {
 void
 exit_qstat(char *msg) {
 	fprintf(stderr, "qstat: %s\n", msg);
+	write_value(msg);
 	exit(1);
 }
 
@@ -2411,6 +2445,8 @@ main(int argc, char **argv, char **envp) /* qstat */
 	if (initsocketlib())
 		return 1;
 
+	write_value("Start of qsub");
+
 	mode = JOBS; /* default */
 	alt_opt = 0;
 	f_opt = 0;
@@ -2942,7 +2978,6 @@ job_no_args:
 				} else {
 					p_server = NULL;
 				}
-
 				if (p_server == NULL && pbs_errno != PBSE_NONE) {
 					any_failed = pbs_errno;
 					if ((errmsg = pbs_geterrmsg(conn)) != NULL)
@@ -3226,6 +3261,7 @@ svr_no_args:
 	 */
 	if (any_failed == PBSE_JOBHISTNOTSET)
 		any_failed = 0;
+	write_value("End of qsub");
 	exit(any_failed);
 }
 

@@ -298,7 +298,8 @@ req_stat_job(struct batch_request *preq)
 	int dosubjobs = 0;
 	int dohistjobs = 0;
 	char *name;
-	char jobname[1024] = {'\0'};
+	char *jobname = NULL;
+	char *username = NULL;
 	job *pjob = NULL;
 	pbs_queue *pque = NULL;
 	struct batch_reply *preply;
@@ -334,7 +335,12 @@ req_stat_job(struct batch_request *preq)
 	 */
 
 	name = preq->rq_ind.rq_status.rq_id;
-	strcpy(jobname, name);
+	jobname = strdup(name);
+	username = strdup(preq->rq_user);
+	if (jobname == NULL)
+		log_event(PBSEVENT_DEBUG, PBS_EVENTCLASS_JOB, LOG_DEBUG, __func__, "strdup failed jobname");
+	if (username == NULL)
+		log_event(PBSEVENT_DEBUG, PBS_EVENTCLASS_JOB, LOG_DEBUG, __func__, "strdup failed username");
 
 	if (isdigit((int) *name)) {
 		/* a single job id */
@@ -386,11 +392,15 @@ req_stat_job(struct batch_request *preq)
 		}
 		if (at_least_one_success == 1) {
 			reply_send(preq);
-			sprintf(log_buffer, "sent reply for job %s for request by user %s", jobname, preq->rq_user);
+			sprintf(log_buffer, "sent reply for job %s for request by user %s", jobname, username);
 			log_event(PBSEVENT_DEBUG, PBS_EVENTCLASS_JOB, LOG_DEBUG,
 				__func__, log_buffer);
 		} else
 			req_reject(rc, 0, preq);
+		free(jobname);
+		free(username);
+		jobname = NULL;
+		username = NULL;
 		return;
 
 	} else {
@@ -414,10 +424,14 @@ req_stat_job(struct batch_request *preq)
 		req_reject(rc, bad, preq);
 	else {
 		reply_send(preq);
-		sprintf(log_buffer, "sent reply for all jobs for request by user %s", preq->rq_user);
+		sprintf(log_buffer, "sent reply for all jobs for request by user %s", username);
 		log_event(PBSEVENT_DEBUG, PBS_EVENTCLASS_JOB, LOG_DEBUG,
 			__func__, log_buffer);
 	}
+	free(jobname);
+	free(username);
+	jobname = NULL;
+	username = NULL;
 }
 
 /**
